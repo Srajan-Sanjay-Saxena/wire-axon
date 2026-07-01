@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2020"],
+    "outDir": "./JS",
+    "rootDir": ".",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": true,
+    "strictFunctionTypes": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "paths": {
+      "@lib/*": ["./types/*"],
+      "@hooks/*": ["./hooks/*"],
+      "@helper/*": ["./helper/*"],
+      "@schemas/*": ["./schemas/*"],
+      "@config/*": ["./config/*"],
+      "@base/*": ["./base/*"],
+      "@features/*": ["./features/*"],
+      "@options/*": ["./options/*"],
+      "@services/*": ["./services/*"],
+      "@auth/*": ["./auth/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "JS", "__tests__"]
+}
