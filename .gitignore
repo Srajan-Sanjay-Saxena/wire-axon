@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.cjs
+.pnp.loader.mjs
+
+# Build output
+JS/
+dist/
+build/
+out/
+
+# Environment variables
+.env
+.env.*
+.env.local
+.env.development
+.env.staging
+.env.production
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Lock files (keep pnpm-lock, ignore others)
+package-lock.json
+yarn.lock
+
+# Internal docs — not for public repo
+internals.md
+
+# Secrets / keys
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+
+# Misc
+.cache/
+.temp/
+tmp/
