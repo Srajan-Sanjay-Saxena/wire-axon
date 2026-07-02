@@ -1,0 +1,16 @@
+# Source
+**/*.ts
+**/*.tsx
+!**/*.d.ts
+
+# Config
+tsconfig.json
+vitest.config.ts
+.gitignore
+
+# Dev
+examples/
+__tests__/
+pnpm-lock.yaml
+internals.md
+RESPONSE_STRUCTURE_MIGRATION.md

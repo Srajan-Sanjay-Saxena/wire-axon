@@ -28,5 +28,5 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "JS", "__tests__"]
+  "exclude": ["node_modules", "JS", "__tests__", "examples"]
 }
