@@ -3,30 +3,51 @@ import type { ApiFactoryInstanceType } from "@lib/api.factory.types.js";
 import { ApiValidationService } from "@helper/validation.manager.js";
 import { urlSchema, getConfigSchema } from "@schemas/api.validation.schema.js";
 import { ApiConfig } from "@lib/api.config.types.js";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import type { ServiceConfig } from "@config/http.client.config.js";
 
-export function useScratchQuery(inputArgs: { baseURL: string }) {
-  const { baseURL } = inputArgs;
+type FeatureConfig = Omit<ServiceConfig, "baseURL" | "withCredentials">;
+
+export function useScratchQuery(inputArgs: {
+  baseURL: string;
+  featureConfig?: FeatureConfig;
+}) {
+  const { baseURL, featureConfig } = inputArgs;
 
   const serviceRef = useRef<ApiFactoryInstanceType>(
-    apiServiceFactory("tanstack")({ baseURL, withCredentials: true }),
+    apiServiceFactory("thunk")({ baseURL, withCredentials: true, ...featureConfig }),
   );
   const service = serviceRef.current;
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const get = async <T>(inputArgs: {
     url: string;
-    config?: Omit<ApiConfig, "data">;
+    apiConfig?: Omit<ApiConfig, "data" | "headers">;
   }) => {
-    const { url, config = {} as Omit<ApiConfig, "data"> } = inputArgs;
+    const { url, apiConfig = {} as Omit<ApiConfig, "data"> } = inputArgs;
     const { url: validUrl, config: validConfig } =
       ApiValidationService.validateRequestData(
         "get",
         { url: urlSchema, config: getConfigSchema },
         url,
-        config,
+        apiConfig,
       );
-    return (await service.get<T>(validUrl, validConfig)).data;
+    setIsLoading(true);
+    setIsError(false);
+    setError(null);
+    try {
+      return (await service.get<T>(validUrl, validConfig)).data;
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(String(e));
+      setError(err);
+      setIsError(true);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  return { get, cancelAll: () => service.cancelAllRequests() };
+  return { get, isLoading, isError, error, cancelAll: () => service.cancelAllRequests() };
 }
