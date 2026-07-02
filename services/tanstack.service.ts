@@ -8,12 +8,8 @@ import {
 import type { AxiosResponse } from 'axios';
 
 export class TanStackApiService extends BaseApiService {
-  constructor(
-    baseURL: string,
-    withCredentials: boolean,
-    config?: Omit<ServiceConfig, 'baseURL' | 'withCredentials'>
-  ) {
-    super(baseURL, withCredentials, config);
+  constructor(config: ServiceConfig) {
+    super(config);
   }
 
   protected async executeRequest<TResData>(
