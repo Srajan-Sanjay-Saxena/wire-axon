@@ -3,31 +3,40 @@ import { apiServiceFactory } from "@services/api.factory.service.js";
 import type { ApiFactoryInstanceType } from "@lib/api.factory.types.js";
 import { urlSchema, getConfigSchema } from "@schemas/api.validation.schema.js";
 import { ApiConfig } from "@lib/api.config.types.js";
-import { useQuery, UseQueryOptions, UndefinedInitialDataOptions } from "@tanstack/react-query";
+import { useQuery, UndefinedInitialDataOptions } from "@tanstack/react-query";
 import { useRef } from "react";
 import { TANSTACK_QUERY_DEFAULT_OPTIONS } from "@options/tanstack.query.default.options.js";
 import type { AxiosResponse } from "axios";
+import type { ServiceConfig } from "@config/http.client.config.js";
+
+type FeatureConfig = Omit<ServiceConfig, "baseURL" | "withCredentials">;
 
 export function useApiQuery<TData>(inputArgs: {
   queryKey: string | string[];
   url: string;
   baseURL: string;
+  featureConfig?: FeatureConfig;
+  apiConfig?: Omit<ApiConfig, "data" | "headers">;
   queryOptions?: Omit<UndefinedInitialDataOptions<AxiosResponse<TData>>, "queryKey" | "queryFn">;
-  config?: Omit<ApiConfig, "data">;
 }) {
   const {
     queryKey,
     url,
     baseURL,
+    featureConfig,
+    apiConfig = {} as Omit<ApiConfig, "data" | "headers">,
     queryOptions = TANSTACK_QUERY_DEFAULT_OPTIONS,
-    config = {} as Omit<ApiConfig, "data">,
   } = inputArgs;
 
   const apiServiceRef = useRef<ApiFactoryInstanceType | null>(null);
   const prevBaseURL = useRef<string | null>(null);
 
   if (!apiServiceRef.current || prevBaseURL.current !== baseURL) {
-    apiServiceRef.current = apiServiceFactory("tanstack")({ baseURL, withCredentials: true });
+    apiServiceRef.current = apiServiceFactory("tanstack")({
+      baseURL,
+      withCredentials: true,
+      ...featureConfig,
+    });
     prevBaseURL.current = baseURL;
   }
   const apiService = apiServiceRef.current;
@@ -38,7 +47,7 @@ export function useApiQuery<TData>(inputArgs: {
         "get",
         { url: urlSchema, config: getConfigSchema },
         url,
-        config,
+        apiConfig,
       );
     return apiService.get<TData>(validatedUrl, validatedConfig);
   };
