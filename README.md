@@ -151,7 +151,7 @@ Used internally by `useApiQuery` and `useApiMutation`. Lets errors propagate nat
 ```ts
 import { TanStackApiService } from 'wire-axon/services';
 
-const service = new TanStackApiService('https://api.example.com', true);
+const service = new TanStackApiService({ baseURL: 'https://api.example.com', withCredentials: true });
 ```
 
 ### AsyncThunkApiService
@@ -161,7 +161,7 @@ Used internally by `useScratchQuery` and `useScratchMutation`, and directly in R
 ```ts
 import { AsyncThunkApiService } from 'wire-axon/services';
 
-const service = new AsyncThunkApiService('https://api.example.com', true);
+const service = new AsyncThunkApiService({ baseURL: 'https://api.example.com', withCredentials: true });
 ```
 
 ### apiServiceFactory
@@ -208,9 +208,16 @@ useApiQuery<TData>(inputArgs: {
   queryKey: string | string[];
   url: string;
   baseURL: string;
+  featureConfig?: FeatureConfig;
+  apiConfig?: Omit<ApiConfig, 'data' | 'headers'>;
   queryOptions?: Omit<UndefinedInitialDataOptions<AxiosResponse<TData>>, 'queryKey' | 'queryFn'>;
-  config?: Omit<ApiConfig, 'data'>;
 })
+```
+
+**FeatureConfig** — same as `ServiceConfig` minus `baseURL` and `withCredentials`. Use it to attach auth, middleware, or retry overrides at the hook level:
+
+```ts
+type FeatureConfig = Omit<ServiceConfig, 'baseURL' | 'withCredentials'>;
 ```
 
 **Returns:**
@@ -264,9 +271,10 @@ useApiMutation<TData>(inputArgs: {
   url: string;
   method: 'post' | 'patch' | 'delete';
   baseURL: string;
+  featureConfig?: FeatureConfig;
+  apiConfig?: ApiConfig;
   mutationOptions?: Omit<UseMutationOptions<AxiosResponse<TData>, Error, Record<string, unknown>>, 'mutationFn'>;
   invalidateQueryName?: string | string[];
-  config?: ApiConfig;
   toastConfig?: {
     successConfig?: { message?: string; customToast?: React.ReactElement };
     errorConfig?: { message?: string; customToast?: React.ReactElement };
@@ -307,14 +315,14 @@ Imperative GET hook — no TanStack Query cache involved. You own the state. Use
 **Signature:**
 
 ```ts
-useScratchQuery(inputArgs: { baseURL: string })
+useScratchQuery(inputArgs: { baseURL: string; featureConfig?: FeatureConfig })
 ```
 
 **Returns:**
 
 | Field | Type | Description |
 |---|---|---|
-| `get` | `<T>(args: { url, config? }) => Promise<T>` | Imperative GET call |
+| `get` | `<T>(args: { url, apiConfig? }) => Promise<T>` | Imperative GET call |
 | `isLoading` | `boolean` | True while request is in flight |
 | `isError` | `boolean` | True if last request failed |
 | `error` | `Error \| null` | Error from last failed request |
@@ -329,14 +337,14 @@ Imperative mutation hook — no TanStack Query cache involved. Use for multi-ste
 **Signature:**
 
 ```ts
-useScratchMutation(inputArgs: { baseURL: string })
+useScratchMutation(inputArgs: { baseURL: string; featureConfig?: FeatureConfig })
 ```
 
 **Returns:**
 
 | Field | Type | Description |
 |---|---|---|
-| `makeRequest` | `<T>(args: { method, url, data?, config? }) => Promise<AxiosResponse<T>>` | Imperative mutation call |
+| `makeRequest` | `<T>(args: { method, url, data?, apiConfig? }) => Promise<AxiosResponse<T>>` | Imperative mutation call |
 | `isLoading` | `boolean` | True while request is in flight |
 | `isError` | `boolean` | True if last request failed |
 | `error` | `Error \| null` | Error from last failed request |
@@ -462,7 +470,9 @@ Built into every service. Retries failed requests with exponential backoff and �
 ```ts
 import { AsyncThunkApiService } from 'wire-axon/services';
 
-const service = new AsyncThunkApiService('https://api.example.com', true, {
+const service = new AsyncThunkApiService({
+  baseURL: 'https://api.example.com',
+  withCredentials: true,
   retry: {
     maxRetries: 5,
     baseDelay: 500,
@@ -510,7 +520,9 @@ pipeline
     return Promise.reject(error);
   });
 
-const service = new AsyncThunkApiService('https://api.example.com', true, {
+const service = new AsyncThunkApiService({
+  baseURL: 'https://api.example.com',
+  withCredentials: true,
   middleware: {
     onRequest: pipeline.getRequestMiddlewares(),
     onResponse: pipeline.getResponseMiddlewares(),
@@ -647,16 +659,14 @@ import { BearerTokenStrategy, ConsoleLogger } from 'wire-axon/auth';
  * Module-level singleton — used directly in Redux thunks.
  * Auth token is read fresh on every request via getAccessToken().
  */
-export const apiService = new AsyncThunkApiService(
-  'https://api.example.com',
-  true,
-  {
-    auth: new BearerTokenStrategy({
-      getAccessToken: () => localStorage.getItem('accessToken'),
-      logger: new ConsoleLogger(),
-    }),
-  }
-);
+export const apiService = new AsyncThunkApiService({
+  baseURL: 'https://api.example.com',
+  withCredentials: true,
+  auth: new BearerTokenStrategy({
+    getAccessToken: () => localStorage.getItem('accessToken'),
+    logger: new ConsoleLogger(),
+  }),
+});
 ```
 
 ```ts
@@ -712,35 +722,33 @@ export default userSlice.reducer;
 import { AsyncThunkApiService } from 'wire-axon/services';
 import { RefreshTokenStrategy, ConsoleLogger } from 'wire-axon/auth';
 
-export const apiService = new AsyncThunkApiService(
-  'https://api.example.com',
-  true,
-  {
-    auth: new RefreshTokenStrategy({
-      getAccessToken: () => localStorage.getItem('accessToken'),
+export const apiService = new AsyncThunkApiService({
+  baseURL: 'https://api.example.com',
+  withCredentials: true,
+  auth: new RefreshTokenStrategy({
+    getAccessToken: () => localStorage.getItem('accessToken'),
 
-      refreshAccessTokenFunc: async () => {
-        // Call your refresh endpoint — refresh token is sent via httpOnly cookie
-        const res = await fetch('https://api.example.com/auth/refresh', {
-          method: 'POST',
-          credentials: 'include',
-        });
-        if (!res.ok) throw new Error('Refresh failed');
-        const data = await res.json();
-        localStorage.setItem('accessToken', data.accessToken);
-        return { accessToken: data.accessToken };
-      },
+    refreshAccessTokenFunc: async () => {
+      // Call your refresh endpoint — refresh token is sent via httpOnly cookie
+      const res = await fetch('https://api.example.com/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Refresh failed');
+      const data = await res.json();
+      localStorage.setItem('accessToken', data.accessToken);
+      return { accessToken: data.accessToken };
+    },
 
-      onRefreshFailure: () => {
-        // Clear local state and redirect to login
-        localStorage.removeItem('accessToken');
-        window.location.href = '/login';
-      },
+    onRefreshFailure: () => {
+      // Clear local state and redirect to login
+      localStorage.removeItem('accessToken');
+      window.location.href = '/login';
+    },
 
-      logger: new ConsoleLogger(),
-    }),
-  }
-);
+    logger: new ConsoleLogger(),
+  }),
+});
 ```
 
 ```ts
@@ -799,13 +807,11 @@ For server-rendered apps or backends that use httpOnly session cookies. No token
 import { AsyncThunkApiService } from 'wire-axon/services';
 import { CookieStrategy, ConsoleLogger } from 'wire-axon/auth';
 
-export const apiService = new AsyncThunkApiService(
-  'https://api.example.com',
-  true,  // withCredentials — required for cookies to be sent cross-origin
-  {
-    auth: new CookieStrategy({ logger: new ConsoleLogger() }),
-  }
-);
+export const apiService = new AsyncThunkApiService({
+  baseURL: 'https://api.example.com',
+  withCredentials: true,  // required for cookies to be sent cross-origin
+  auth: new CookieStrategy({ logger: new ConsoleLogger() }),
+});
 ```
 
 ```ts
@@ -890,29 +896,27 @@ pipeline
     return Promise.reject(error);
   });
 
-export const apiService = new AsyncThunkApiService(
-  'https://api.example.com',
-  true,
-  {
-    auth: new BearerTokenStrategy({
-      getAccessToken: () => localStorage.getItem('accessToken'),
-      logger: undefined,
-    }),
-    middleware: {
-      onRequest: pipeline.getRequestMiddlewares(),
-      onResponse: pipeline.getResponseMiddlewares(),
-      onError: pipeline.getErrorMiddlewares(),
-    },
-    retry: {
-      maxRetries: 5,
-      baseDelay: 500,
-      maxDelay: 15000,
-      backoffFactor: 2,
-      retryableStatuses: [500, 502, 503, 504],
-      retryOnNetworkError: true,
-    },
-  }
-);
+export const apiService = new AsyncThunkApiService({
+  baseURL: 'https://api.example.com',
+  withCredentials: true,
+  auth: new BearerTokenStrategy({
+    getAccessToken: () => localStorage.getItem('accessToken'),
+    logger: undefined,
+  }),
+  middleware: {
+    onRequest: pipeline.getRequestMiddlewares(),
+    onResponse: pipeline.getResponseMiddlewares(),
+    onError: pipeline.getErrorMiddlewares(),
+  },
+  retry: {
+    maxRetries: 5,
+    baseDelay: 500,
+    maxDelay: 15000,
+    backoffFactor: 2,
+    retryableStatuses: [500, 502, 503, 504],
+    retryOnNetworkError: true,
+  },
+});
 ```
 
 ---
@@ -942,7 +946,7 @@ export function useFileUpload(baseURL: string) {
     // Step 1 — get presigned URL
     const { uploadUrl, fileKey } = await get<PresignedUrlResponse>({
       url: '/uploads/presigned',
-      config: { params: { filename: file.name, contentType: file.type } },
+      apiConfig: { params: { filename: file.name, contentType: file.type } },
     });
 
     // Step 2 — upload directly to S3 (not through our API)
@@ -1052,39 +1056,37 @@ pipeline
  * Singleton service used in all Redux thunks.
  * Handles token refresh, request tracing, and retry automatically.
  */
-export const apiService = new AsyncThunkApiService(
-  process.env.REACT_APP_API_URL!,
-  true,
-  {
-    auth: new RefreshTokenStrategy({
-      getAccessToken: () => localStorage.getItem('accessToken'),
-      refreshAccessTokenFunc: async () => {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/auth/refresh`, {
-          method: 'POST',
-          credentials: 'include',
-        });
-        const data = await res.json();
-        localStorage.setItem('accessToken', data.accessToken);
-        return { accessToken: data.accessToken };
-      },
-      onRefreshFailure: () => {
-        localStorage.removeItem('accessToken');
-        window.location.href = '/login';
-      },
-      logger: new ConsoleLogger(),
-    }),
-    middleware: {
-      onRequest: pipeline.getRequestMiddlewares(),
-      onResponse: pipeline.getResponseMiddlewares(),
-      onError: pipeline.getErrorMiddlewares(),
+export const apiService = new AsyncThunkApiService({
+  baseURL: process.env.REACT_APP_API_URL!,
+  withCredentials: true,
+  auth: new RefreshTokenStrategy({
+    getAccessToken: () => localStorage.getItem('accessToken'),
+    refreshAccessTokenFunc: async () => {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      localStorage.setItem('accessToken', data.accessToken);
+      return { accessToken: data.accessToken };
     },
-    retry: {
-      maxRetries: 3,
-      baseDelay: 1000,
-      retryableStatuses: [500, 502, 503, 504],
+    onRefreshFailure: () => {
+      localStorage.removeItem('accessToken');
+      window.location.href = '/login';
     },
-  }
-);
+    logger: new ConsoleLogger(),
+  }),
+  middleware: {
+    onRequest: pipeline.getRequestMiddlewares(),
+    onResponse: pipeline.getResponseMiddlewares(),
+    onError: pipeline.getErrorMiddlewares(),
+  },
+  retry: {
+    maxRetries: 3,
+    baseDelay: 1000,
+    retryableStatuses: [500, 502, 503, 504],
+  },
+});
 ```
 
 ```ts
