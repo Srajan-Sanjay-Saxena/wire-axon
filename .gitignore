@@ -54,6 +54,9 @@ yarn.lock
 # Internal docs — not for public repo
 internals.md
 
+# Local examples — not for public repo
+examples/
+
 # Secrets / keys
 *.pem
 *.key
