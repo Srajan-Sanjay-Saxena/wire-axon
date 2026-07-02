@@ -10,12 +10,8 @@ import axios from 'axios';
 import type { AxiosResponse, AxiosError } from 'axios';
 
 export class AsyncThunkApiService extends BaseApiService {
-  constructor(
-    baseURL: string,
-    withCredentials: boolean,
-    config?: Omit<ServiceConfig, 'baseURL' | 'withCredentials'>
-  ) {
-    super(baseURL, withCredentials, config);
+  constructor(config: ServiceConfig) {
+    super(config);
   }
 
   protected async executeRequest<TResData>(
