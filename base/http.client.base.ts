@@ -17,19 +17,19 @@ export abstract class BaseApiService {
   protected cancellationService: RequestCancellationManager;
   protected middlewarePipeline: MiddlewarePipeline;
   protected retryEngine: RetryEngine;
+  protected baseURL: string;
 
-  constructor(
-    protected baseURL: string,
-    protected withCredentials: boolean,
-    config?: Omit<ServiceConfig, "baseURL" | "withCredentials">,
-  ) {
+  constructor(config: ServiceConfig) {
+    const { baseURL, withCredentials, middleware, retry, auth } = config;
+
+    this.baseURL = baseURL;
     this.axiosInstance = axios.create({ baseURL, withCredentials });
     this.cancellationService = new RequestCancellationManager();
-    this.middlewarePipeline = new MiddlewarePipeline(config?.middleware);
-    this.retryEngine = new RetryEngine(config?.retry);
+    this.middlewarePipeline = new MiddlewarePipeline(middleware);
+    this.retryEngine = new RetryEngine(retry);
 
-    if (config?.auth) {
-      config.auth.attach(this.axiosInstance);
+    if (auth) {
+      auth.attach(this.axiosInstance);
     }
 
     this.setupMiddleware();
@@ -37,8 +37,7 @@ export abstract class BaseApiService {
 
   private setupMiddleware(): void {
     const requestMiddlewares = this.middlewarePipeline.getRequestMiddlewares();
-    const responseMiddlewares =
-      this.middlewarePipeline.getResponseMiddlewares();
+    const responseMiddlewares = this.middlewarePipeline.getResponseMiddlewares();
     const errorMiddlewares = this.middlewarePipeline.getErrorMiddlewares();
 
     requestMiddlewares.forEach((middleware) => {
