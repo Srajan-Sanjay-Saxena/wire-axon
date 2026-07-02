@@ -1,806 +1,1252 @@
-# 🚀 ZenithAPI - The Ultimate Type-Safe HTTP Client
+# wire-axon
 
-> **A revolutionary, production-ready HTTP client engineered with SOLID principles, branded types, and enterprise-grade validation**
+> Type-safe HTTP client for React — built on Axios, Zod, TanStack Query, and Redux Toolkit. Features branded types, Zod validation pipeline, retry with exponential backoff, request cancellation, middleware pipeline, and auth token strategies.
 
-<div align="center">
+**Created by Srajan Saxena**
 
-![ZenithAPI Logo](https://img.shields.io/badge/ZenithAPI-v2.0-blue?style=for-the-badge&logo=typescript&logoColor=white)
-
-**Created by Srajan Sanjay Saxena**  
-_Signature Advanced API Calling Service_
-
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React Query](https://img.shields.io/badge/React_Query-FF4154?style=for-the-badge&logo=react-query&logoColor=white)](https://tanstack.com/query)
-[![Axios](https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white)](https://axios-http.com/)
-[![Zod](https://img.shields.io/badge/Zod-3E67B1?style=for-the-badge&logo=zod&logoColor=white)](https://zod.dev/)
-
-</div>
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Axios](https://img.shields.io/badge/Axios-5A29E4?style=flat-square&logo=axios&logoColor=white)](https://axios-http.com/)
+[![TanStack Query](https://img.shields.io/badge/TanStack_Query-FF4154?style=flat-square&logo=react-query&logoColor=white)](https://tanstack.com/query)
+[![Zod](https://img.shields.io/badge/Zod-3E67B1?style=flat-square)](https://zod.dev/)
 
 ---
 
-## 🌟 What Makes ZenithAPI Revolutionary?
+## Table of Contents
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  🎯 BRANDED TYPES    🛡️ ZOD VALIDATION    🏗️ SOLID DESIGN  │
-│                                                             │
-│  Raw Input ──► Validation ──► Branding ──► Type Safety     │
-│      ↓             ↓            ↓            ↓             │
-│   string      ZodSchema    ValidatedUrl   Compile-time     │
-│   object   ──► Parsing  ──► Branding  ──► Protection      │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
+- [Installation](#installation)
+- [Architecture](#architecture)
+- [Branded Types & Validation](#branded-types--validation)
+- [Services](#services)
+- [Hooks](#hooks)
+  - [useApiQuery](#useapiquery)
+  - [useApiMutation](#useapimutation)
+  - [useScratchQuery](#usescratchquery)
+  - [useScratchMutation](#usescratchmutation)
+- [Auth Strategies](#auth-strategies)
+- [Retry Engine](#retry-engine)
+- [Middleware Pipeline](#middleware-pipeline)
+- [Request Cancellation](#request-cancellation)
+- [Examples](#examples)
 
-## ✨ Revolutionary Features
+---
 
-- 🏷️ **Branded Types** - Compile-time safety with runtime validation
-- 🔍 **Zod Validation** - Schema-based input validation with detailed errors
-- 🏗️ **SOLID Architecture** - Clean, maintainable, and extensible design
-- 🔄 **Dual Service Support** - TanStack Query & AsyncThunk optimized
-- 🎯 **Type Safety** - Full TypeScript support with branded generics
-- 🔔 **Smart Notifications** - Built-in toast integration with Sonner
-- 🎣 **Powerful Hooks** - React Query mutations with callbacks
-- 🌐 **Context Sync** - Seamless integration with React Context API
-- ⚡ **Performance** - Optimized for production workloads
-- 🛡️ **Error Handling** - Comprehensive error management
-
-## 📦 Installation
+## Installation
 
 ```bash
-npm install axios @tanstack/react-query sonner zod
-# or
-yarn add axios @tanstack/react-query sonner zod
-# or
-pnpm add axios @tanstack/react-query sonner zod
+# peer dependencies
+pnpm add axios zod @tanstack/react-query sonner react
+
+# the package
+pnpm add wire-axon
 ```
 
-## 🏛️ Architecture Deep Dive
-
-### 🎭 The Magic of Branded Types
-
-```typescript
-// 🏷️ Brand Utility - The Foundation
-declare const brand: unique symbol;
-export type Brand<T, TBrand> = T & { readonly [brand]: TBrand };
-
-// 🎯 Branded Types in Action
-export type ValidatedUrl = Brand<string, 'ValidatedUrl'>;
-export type ValidatedBody = Brand<Record<string, any>, 'ValidatedBody'>;
-
-// ✨ Compile-time Protection
-function makeRequest(url: ValidatedUrl) {
-  /* ... */
-}
-
-makeRequest('/api/users'); // ❌ TypeScript Error!
-makeRequest(validateUrl('/api/users')); // ✅ Works!
-```
-
-### 🔍 Zod Validation Pipeline
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    VALIDATION PIPELINE                      │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  Raw Input ──┐                                             │
-│              │                                             │
-│              ▼                                             │
-│         ┌─────────┐    ✅ Valid     ┌──────────────┐       │
-│         │   ZOD   │ ──────────────► │   BRANDED    │       │
-│         │ SCHEMA  │                 │    TYPE      │       │
-│         └─────────┘                 └──────────────┘       │
-│              │                                             │
-│              ▼ ❌ Invalid                                   │
-│         ┌─────────┐                                        │
-│         │  ERROR  │                                        │
-│         │ THROWN  │                                        │
-│         └─────────┘                                        │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 🏗️ SOLID Principles Implementation
-
-```typescript
-// 📐 Single Responsibility Principle
-abstract class BaseApiService {
-  // Only handles HTTP abstraction
-}
-
-// 🔓 Open/Closed Principle
-class TanStackApiService extends BaseApiService {
-  // Extends without modifying base
-}
-
-// 🔄 Liskov Substitution Principle
-const service: BaseApiService = new TanStackApiService(); // ✅ Works!
-
-// 🎯 Interface Segregation Principle
-interface ValidatedConfig {
-  /* Only what's needed */
-}
-
-// 🔀 Dependency Inversion Principle
-class ApiService {
-  constructor(private validator: ValidationService) {} // Depends on abstraction
-}
-```
-
-## 🚀 Quick Start Guide
-
-### 1. 🏭 Service Factory Pattern
-
-```typescript
-import { ApiServiceFactory } from './services/httpClient';
-
-// 🎯 For TanStack Query (React Query)
-const tanstackService = ApiServiceFactory.createTanStackService(
-  'https://api.example.com',
-  true
-);
-
-// 🔄 For Redux AsyncThunk
-const asyncThunkService = ApiServiceFactory.createAsyncThunkService(
-  'https://api.example.com',
-  true
-);
-```
-
-### 2. 🎪 Validation Magic in Action
-
-```typescript
-import { ApiValidationService } from './validation/ApiValidation';
-
-// ✨ Transform raw data into branded types
-const validatedUrl = ApiValidationService.validateUrl('/api/users');
-const validatedBody = ApiValidationService.validateBody({ name: 'John' });
-const validatedConfig = ApiValidationService.validateGetConfig({});
-
-// 🎯 Now type-safe and validated!
-const response = await tanstackService.get(validatedUrl, validatedConfig);
-```
-
-## 🎣 Advanced Query Hook
-
-### 🌟 Basic Query with Validation
-
-```typescript
-import { useApiQuery } from './hooks/useQueryApiService';
-
-const UsersList = () => {
-  const { data: users, isLoading, error, refetch } = useApiQuery<User[]>(
-    ['users'], // 🔑 Query key
-    '/api/users', // 🌐 URL (auto-validated)
-    {
-      enabled: true,
-      staleTime: 5 * 60 * 1000, // ⏰ 5 minutes
-      retry: 3
-    },
-    {
-      params: { page: '1', limit: '10' } // 📋 Auto-validated config
-    },
-    {
-      onSuccess: (response) => {
-        ('✅ Users loaded:', response.data);
-        // 🎉 Celebration animation trigger
-        triggerSuccessAnimation();
-      },
-      onError: (error) => {
-        console.error('❌ Failed to load users:', error);
-        // 💥 Error shake animation
-        triggerErrorShake();
-      }
-    }
-  );
-
-  if (isLoading) return <LoadingSpinner animation="pulse" />;
-  if (error) return <ErrorBoundary error={error} />;
-
-  return (
-    <AnimatedContainer>
-      <h2>👥 Users ({users?.length})</h2>
-      <RefreshButton onClick={() => refetch()}>🔄 Refresh</RefreshButton>
-      {users?.map(user => (
-        <UserCard key={user.id} user={user} />
-      ))}
-    </AnimatedContainer>
-  );
-};
-```
-
-### 🎭 Advanced Query Patterns
-
-```typescript
-// 🎯 Conditional Query with Smart Validation
-const UserProfile = ({ userId }: { userId?: string }) => {
-  const { data: user, isLoading } = useApiQuery<User>(
-    ['user', userId],
-    `/api/users/${userId}`,
-    {
-      enabled: !!userId, // 🎛️ Only run when userId exists
-      staleTime: 10 * 60 * 1000 // ⏰ 10 minutes cache
-    }
-  );
-
-  return (
-    <FadeTransition show={!isLoading}>
-      {user ? <UserCard user={user} /> : <UserSkeleton />}
-    </FadeTransition>
-  );
-};
-
-// 🔐 Authenticated Query with Auto-Validation
-const ProtectedData = () => {
-  const { data, error } = useApiQuery<ProtectedResource>(
-    ['protected-data'],
-    '/api/protected',
-    { retry: 1 },
-    {
-      headers: {
-        'Authorization': `Bearer ${getAuthToken()}`,
-        'Content-Type': 'application/json'
-      }
-    },
-    {
-      onError: (error) => {
-        if (error.response?.status === 401) {
-          // 🚪 Auto-redirect with smooth transition
-          smoothRedirectToLogin();
-        }
-      }
-    }
-  );
-
-  return <SecureDataDisplay data={data} />;
-};
-```
-
-## 🎪 Advanced Mutation Hook
-
-### 🌟 Basic Mutation with Validation
-
-```typescript
-import { useApiMutation } from './hooks/useMutationApiService';
-
-const CreateUserForm = () => {
-  const { isPending, mutate, isSuccess, isError } = useApiMutation<User>(
-    '/api/users', // 🌐 Auto-validated URL
-    'post',
-    { retry: false },
-    ['users'], // 🔄 Query keys to invalidate
-    {},
-    {
-      onSuccess: (response) => {
-        ('🎉 User created:', response.data);
-        // ✨ Success confetti animation
-        triggerConfetti();
-      },
-      onError: (error) => {
-        console.error('💥 Creation failed:', error);
-        // 🔴 Error pulse animation
-        triggerErrorPulse();
-      }
-    },
-    {
-      success: '🎉 User created successfully!',
-      error: '💥 Failed to create user'
-    }
-  );
-
-  const handleSubmit = (formData: CreateUserData) => {
-    // 🎯 Data auto-validated before sending
-    mutate(formData);
-  };
-
-  return (
-    <AnimatedForm onSubmit={handleSubmit}>
-      <SubmitButton
-        disabled={isPending}
-        animation={isPending ? 'spin' : 'bounce'}
-      >
-        {isPending ? '⏳ Creating...' : '✨ Create User'}
-      </SubmitButton>
-    </AnimatedForm>
-  );
-};
-```
-
-## 🌟 Production-Grade Examples
-
-### 🎯 1. Real-Time WebSocket Integration
-
-```typescript
-const { mutate: createOrder } = useApiMutation(
-  '/api/orders',
-  'post',
-  { retry: false },
-  ['orders'],
-  {},
-  {
-    onSuccess: (response) => {
-      // 📡 Real-time WebSocket broadcast
-      websocketService.emit('order_created', {
-        orderId: response.data.id,
-        userId: currentUser.id,
-        timestamp: new Date().toISOString(),
-        animation: 'slideIn', // 🎭 UI animation trigger
-      });
-
-      // 📊 Analytics with visual feedback
-      analytics.track('Order Created', {
-        orderId: response.data.id,
-        amount: response.data.total,
-        items: response.data.items.length,
-      });
-
-      // 📧 Multi-channel notifications
-      notificationService.send({
-        email: user.email,
-        push: user.deviceToken,
-        inApp: true,
-        animation: 'fadeIn',
-      });
-    },
-    onError: (error) => {
-      // 🚨 Advanced error monitoring
-      errorLogger.captureException(error, {
-        context: 'order_creation',
-        userId: currentUser.id,
-        severity: 'high',
-        animation: 'shake',
-      });
-    },
-  }
-);
-```
-
-### 🎪 2. Multi-Service Orchestration
-
-```typescript
-const { mutate: processPayment } = useApiMutation(
-  '/api/payments',
-  'post',
-  { retry: false },
-  ['payments', 'user-balance'],
-  {},
-  {
-    onSuccess: async (response) => {
-      // 🎭 Orchestrated service calls with animations
-      const animations = ['slideIn', 'fadeIn', 'bounceIn'];
-
-      await Promise.allSettled([
-        // 💰 Update wallet with smooth animation
-        walletService.updateBalance(response.data.newBalance, animations[0]),
-
-        // 🎁 Add loyalty points with celebration
-        loyaltyService.addPoints(
-          user.id,
-          response.data.pointsEarned,
-          animations[1]
-        ),
-
-        // 📦 Trigger fulfillment with progress animation
-        fulfillmentService.processOrder(response.data.orderId, animations[2]),
-
-        // 📊 Real-time admin dashboard update
-        adminWebSocket.emit('payment_received', {
-          amount: response.data.amount,
-          userId: user.id,
-          timestamp: Date.now(),
-          animation: 'pulse',
-        }),
-      ]);
-    },
-  }
-);
-```
-
-## 🔄 Context API Integration
-
-### 🎭 Smart Context Synchronization
-
-```typescript
-// 🏗️ Context Setup with Animation States
-const UserContext = createContext<{
-  state: UserState & { animations: AnimationState };
-  dispatch: React.Dispatch<UserAction>;
-} | null>(null);
-
-const userReducer = (state: UserState, action: UserAction): UserState => {
-  switch (action.type) {
-    case 'ADD_USER':
-      return {
-        ...state,
-        users: [...state.users, action.payload],
-        animations: { ...state.animations, lastAction: 'slideIn' },
-      };
-    case 'UPDATE_USER':
-      return {
-        ...state,
-        users: state.users.map((user) =>
-          user.id === action.payload.id ? action.payload : user
-        ),
-        animations: { ...state.animations, lastAction: 'pulse' },
-      };
-    default:
-      return state;
-  }
-};
-```
-
-### 🌟 Real-Time Context Sync
-
-```typescript
-const RealTimeUserList = () => {
-  const { dispatch } = useUserContext();
-
-  const { data: users, refetch } = useApiQuery<User[]>(
-    ['users', 'realtime'],
-    '/api/users',
-    {
-      staleTime: 30 * 1000,
-      refetchInterval: 60 * 1000
-    },
-    {},
-    {
-      onSuccess: (response) => {
-        // 🎯 Context sync with animation
-        dispatch({
-          type: 'SET_USERS',
-          payload: response.data,
-          animation: 'fadeIn'
-        });
-
-        // 📡 WebSocket broadcast with visual feedback
-        websocketService.emit('users_updated', {
-          count: response.data.length,
-          timestamp: Date.now(),
-          animation: 'countUp'
-        });
-      }
-    }
-  );
-
-  // 🎧 WebSocket listener with animations
-  useEffect(() => {
-    const handleUserUpdate = (data) => {
-      // 🎭 Trigger update animation
-      triggerUpdateAnimation(data.animation);
-      refetch();
-    };
-
-    websocketService.on('user_changed', handleUserUpdate);
-    return () => websocketService.off('user_changed', handleUserUpdate);
-  }, [refetch]);
-
-  return (
-    <AnimatedList animation="staggerIn">
-      {users?.map(user => (
-        <UserCard key={user.id} user={user} />
-      ))}
-    </AnimatedList>
-  );
-};
-```
-
-## 🎯 Internal Architecture Visualization
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    ZENITHAPI ARCHITECTURE                   │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  📱 React Hooks Layer                                       │
-│  ├── useApiQuery (TanStack Query)                          │
-│  └── useApiMutation (Mutations + Context Sync)             │
-│                          │                                  │
-│                          ▼                                  │
-│  🔍 Validation Layer                                        │
-│  ├── ApiValidationService                                  │
-│  ├── Zod Schemas (URL, Body, Config)                       │
-│  └── Branded Type Generation                               │
-│                          │                                  │
-│                          ▼                                  │
-│  🏗️ Service Layer                                           │
-│  ├── BaseApiService (Abstract)                             │
-│  ├── TanStackApiService (No Error Handling)                │
-│  └── AsyncThunkApiService (With Error Handling)            │
-│                          │                                  │
-│                          ▼                                  │
-│  🌐 HTTP Layer                                              │
-│  ├── Axios Instance                                         │
-│  ├── Request Interceptors                                   │
-│  └── Response Interceptors                                  │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## 🎪 Validation Flow Animation
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    VALIDATION FLOW                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  Raw Input ──┐                                             │
-│  "api/users" │                                             │
-│              ▼                                             │
-│         ┌─────────┐                                        │
-│         │   ZOD   │ ◄── UrlSchema.safeParse()              │
-│         │ PARSING │                                        │
-│         └─────────┘                                        │
-│              │                                             │
-│              ▼ ✅ Success                                   │
-│         ┌─────────┐                                        │
-│         │ BRANDED │ ◄── result.data as ValidatedUrl        │
-│         │  TYPE   │                                        │
-│         └─────────┘                                        │
-│              │                                             │
-│              ▼                                             │
-│         ┌─────────┐                                        │
-│         │ HTTP    │ ◄── apiService.get(validatedUrl, ...)  │
-│         │ CLIENT  │                                        │
-│         └─────────┘                                        │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## 🔧 Configuration & Customization
-
-### 🎯 Environment-Specific Setup
-
-```typescript
-// 🌍 Multi-environment configuration
-const API_CONFIG = {
-  development: {
-    baseURL: 'http://localhost:3001/api',
-    timeout: 10000,
-    animations: true,
-    debugMode: true,
-  },
-  staging: {
-    baseURL: 'https://staging-api.example.com',
-    timeout: 15000,
-    animations: true,
-    debugMode: false,
-  },
-  production: {
-    baseURL: 'https://api.example.com',
-    timeout: 30000,
-    animations: false, // 🎭 Disable animations in prod
-    debugMode: false,
-  },
-};
-
-export const getApiConfig = () => {
-  const env = process.env.NODE_ENV as keyof typeof API_CONFIG;
-  return API_CONFIG[env] || API_CONFIG.development;
-};
-```
-
-### 🎪 Custom Validation Schemas
-
-```typescript
-// 🎯 Custom branded types for your domain
-export type ValidatedUserId = Brand<string, 'ValidatedUserId'>;
-export type ValidatedEmail = Brand<string, 'ValidatedEmail'>;
-
-// 🔍 Domain-specific schemas
-export const UserIdSchema = z.string().uuid('Invalid user ID format');
-export const EmailSchema = z.string().email('Invalid email format');
-
-// ✨ Custom validation service
-export class CustomValidationService extends ApiValidationService {
-  static validateUserId(id: unknown): ValidatedUserId {
-    const result = UserIdSchema.safeParse(id);
-    if (!result.success) {
-      throw new Error(`Invalid user ID: ${result.error.message}`);
-    }
-    return result.data as ValidatedUserId;
-  }
-}
-```
-
-## 🎭 Animation Integration
-
-### 🌟 Built-in Animation Triggers
-
-```typescript
-// 🎪 Animation service integration
-const AnimationService = {
-  success: () => triggerConfetti(),
-  error: () => triggerShake(),
-  loading: () => triggerPulse(),
-  update: () => triggerSlideIn(),
-  delete: () => triggerFadeOut(),
-};
-
-// 🎯 Hook with animation callbacks
-const { mutate } = useApiMutation(
-  '/api/users',
-  'post',
-  { retry: false },
-  ['users'],
-  {},
-  {
-    onSuccess: (response) => {
-      AnimationService.success();
-      // 🎉 Custom celebration
-      celebrateUserCreation(response.data);
-    },
-    onError: (error) => {
-      AnimationService.error();
-      // 💥 Error feedback
-      showErrorFeedback(error);
-    },
-  }
-);
-```
-
-## 🧪 Testing & Quality Assurance
-
-### 🎯 Comprehensive Testing Setup
-
-```typescript
-// 🧪 Mock service for testing
-const createMockService = () => ({
-  get: jest.fn().mockResolvedValue({ data: mockUsers }),
-  post: jest.fn().mockResolvedValue({ data: mockUser }),
-  patch: jest.fn().mockResolvedValue({ data: updatedUser }),
-  delete: jest.fn().mockResolvedValue({ data: { success: true } })
-});
-
-// 🎭 Test with animations disabled
-const TestWrapper = ({ children }) => (
-  <QueryClientProvider client={testQueryClient}>
-    <AnimationProvider disabled>
-      {children}
-    </AnimationProvider>
-  </QueryClientProvider>
-);
-
-test('should create user with proper validation', async () => {
-  const { result } = renderHook(
-    () => useApiMutation('/api/users', 'post'),
-    { wrapper: TestWrapper }
-  );
-
-  act(() => {
-    result.current.mutate({ name: 'John', email: 'john@example.com' });
-  });
-
-  expect(result.current.isPending).toBe(true);
-});
-```
-
-## 📊 Performance Metrics
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    PERFORMANCE METRICS                      │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  🚀 Validation Speed:     < 1ms per request                │
-│  🎯 Type Safety:          100% compile-time coverage       │
-│  🔄 Cache Hit Rate:       95%+ with TanStack Query         │
-│  📦 Bundle Size:          +12KB (gzipped)                  │
-│  🎭 Animation Overhead:   < 0.5ms per trigger              │
-│  🛡️ Error Prevention:     99.9% runtime error reduction   │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## 🚀 Deployment & Production
-
-### 🎯 Production Optimizations
-
-```typescript
-// 🏭 Production service configuration
-const productionService = ApiServiceFactory.createTanStackService(
-  process.env.REACT_APP_API_URL!,
-  true
-);
-
-// 🔧 Request interceptor for auth
-productionService.axiosInstance.interceptors.request.use((config) => {
-  const token = secureStorage.getToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// 🔄 Response interceptor for token refresh
-productionService.axiosInstance.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      await refreshAuthToken();
-      return productionService.axiosInstance.request(error.config);
-    }
-    return Promise.reject(error);
-  }
-);
-```
-
-## 📚 Best Practices & Guidelines
-
-### 🎯 Do's and Don'ts
-
-```typescript
-// ✅ DO: Always use validation
-const validatedUrl = ApiValidationService.validateUrl('/api/users');
-const response = await service.get(validatedUrl, config);
-
-// ❌ DON'T: Skip validation
-const response = await service.get('/api/users', config); // Type error!
-
-// ✅ DO: Use branded types consistently
-function processUser(id: ValidatedUserId) {
-  /* ... */
-}
-
-// ❌ DON'T: Mix branded and regular types
-function processUser(id: string) {
-  /* ... */
-} // Less safe
-
-// ✅ DO: Handle errors gracefully with animations
-onError: (error) => {
-  AnimationService.error();
-  showUserFriendlyMessage(error);
-};
-
-// ❌ DON'T: Ignore error states
-onError: (error) => {
-  error; // Poor UX
-};
-```
-
-## 🤝 Contributing
-
-We welcome contributions to ZenithAPI! Please follow these guidelines:
-
-1. 🍴 Fork the repository
-2. 🌿 Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. ✅ Add tests for your changes
-4. 🎭 Ensure animations work properly
-5. 📝 Update documentation
-6. 💾 Commit your changes (`git commit -m 'Add amazing feature'`)
-7. 📤 Push to the branch (`git push origin feature/amazing-feature`)
-8. 🔄 Open a Pull Request
-
-## 📄 License
-
-This project is licensed under a **Proprietary License** - see the [LICENSE](LICENSE) file for details.
-
-⚠️ **IMPORTANT**: This software is proprietary and confidential. Unauthorized copying, distribution, or use is strictly prohibited and may result in legal action.
-
-## 🙏 Acknowledgments
-
-- [Axios](https://axios-http.com/) - Promise based HTTP client
-- [TanStack Query](https://tanstack.com/query) - Powerful data synchronization
-- [Zod](https://zod.dev/) - TypeScript-first schema validation
-- [Sonner](https://sonner.emilkowal.ski/) - Beautiful toast notifications
-- [TypeScript](https://www.typescriptlang.org/) - Type safety and developer experience
+**Peer dependencies:**
+
+| Package | Version | Required |
+|---|---|---|
+| `axios` | `>=1.0.0` | Yes |
+| `zod` | `>=4.0.0` | Yes |
+| `react` | `>=18.0.0` | Only for hooks |
+| `@tanstack/react-query` | `>=5.0.0` | Only for `useApiQuery` / `useApiMutation` |
+| `sonner` | `>=2.0.0` | Only for toast notifications |
 
 ---
 
-<div align="center">
+## Architecture
 
-## 🎭 **ZenithAPI - Where Type Safety Meets Performance**
+```
+wire-axon/
+├── hooks/          → React hooks (useApiQuery, useApiMutation, useScratchQuery, useScratchMutation)
+├── services/       → Service classes + factory (TanStackApiService, AsyncThunkApiService)
+├── base/           → Abstract base classes (BaseApiService, BaseAuthAxios)
+├── features/       → RetryEngine, MiddlewarePipeline, RequestCancellationManager
+├── auth/           → Auth strategies (Bearer, Cookie, RefreshToken)
+├── helper/         → ApiValidationService (Zod validation pipeline)
+└── options/        → Default TanStack Query options, default retry config
+```
 
-**Created with ❤️ by Srajan Sanjay Saxena**  
-_Signature Advanced API Calling Service_
+**Import paths:**
 
-🔒 **Proprietary Software** - Contact for licensing inquiries
+```ts
+import { useApiQuery, useApiMutation }     from 'wire-axon/hooks';
+import { AsyncThunkApiService }            from 'wire-axon/services';
+import { BaseApiService }                  from 'wire-axon/base';
+import { RetryEngine, MiddlewarePipeline } from 'wire-axon/features';
+import { BearerTokenStrategy }             from 'wire-axon/auth';
+import { ApiValidationService }            from 'wire-axon/helper';
+import { DEFAULT_RETRY_CONFIG }            from 'wire-axon/options';
+```
 
-[![Email](https://img.shields.io/badge/Email-Contact_for_License-red?style=for-the-badge&logo=gmail)](mailto:srajan.saxena@example.com)
-[![GitHub](https://img.shields.io/badge/GitHub-Report_Bug-black?style=for-the-badge&logo=github)](https://github.com/srajansaxena/zenithapi/issues)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=for-the-badge&logo=linkedin)](https://linkedin.com/in/srajansaxena)
+---
 
-### 🌟 "Elevating API calls to an art form" 🌟
+## Branded Types & Validation
 
-</div>
+wire-axon uses **branded types** to make it impossible to pass unvalidated input to the HTTP layer at compile time.
+
+```ts
+// A branded type is a plain type with a compile-time tag
+type Brand<T, TBrand> = T & { readonly __brand: TBrand };
+type ValidatedUrl = Brand<string, 'ValidData'>;
+
+// A raw string cannot be assigned to ValidatedUrl
+const url: ValidatedUrl = '/api/users';           // ❌ TypeScript error
+const url: ValidatedUrl = validateUrl('/api/users'); // ✅ only way through
+```
+
+**The validation pipeline:**
+
+```
+raw string
+    │
+    ▼
+ApiValidationService.validateRequestData()
+    │
+    ▼
+Zod schema.safeParse()
+    │
+    ├── ❌ throws Error with Zod message
+    │
+    └── ✅ returns value cast as branded type
+            │
+            ▼
+        BaseApiService.get() / post() / patch() / delete()
+            │
+            ▼
+        retryEngine.execute() → axios HTTP request
+```
+
+**Validation rules:**
+
+| Input | Schema | Rules |
+|---|---|---|
+| `url` | `urlSchema` | Non-empty, valid absolute URL or `/`-prefixed relative path |
+| `config` (GET) | `getConfigSchema` | `headers`, `params`, `timeout`, `signal` only — strict, no extra keys |
+| `config` (mutation) | `mutationConfigSchema` | Same as GET + optional `data` field |
+| `body` | `bodySchema` | `Record<string, any>`, must have at least one key |
+
+**Using `ApiValidationService` directly:**
+
+```ts
+import { ApiValidationService } from 'wire-axon/helper';
+import { urlSchema, getConfigSchema } from 'wire-axon/schemas'; // if needed
+
+const { url, config } = ApiValidationService.validateRequestData(
+  'get',
+  { url: urlSchema, config: getConfigSchema },
+  '/api/users',
+  { timeout: 5000 }
+);
+// url   → ValidatedUrl
+// config → ValidatedGetConfig
+```
+
+---
+
+## Services
+
+### TanStackApiService
+
+Used internally by `useApiQuery` and `useApiMutation`. Lets errors propagate naturally so TanStack Query can catch and manage them.
+
+```ts
+import { TanStackApiService } from 'wire-axon/services';
+
+const service = new TanStackApiService('https://api.example.com', true);
+```
+
+### AsyncThunkApiService
+
+Used internally by `useScratchQuery` and `useScratchMutation`, and directly in Redux thunks. Wraps errors as plain `Error` objects with `status` and `data` attached — compatible with `createAsyncThunk`'s `rejectWithValue` pattern.
+
+```ts
+import { AsyncThunkApiService } from 'wire-axon/services';
+
+const service = new AsyncThunkApiService('https://api.example.com', true);
+```
+
+### apiServiceFactory
+
+Curried factory function for creating either service type:
+
+```ts
+import { apiServiceFactory } from 'wire-axon/services';
+
+const tanstackService = apiServiceFactory('tanstack')({ baseURL: 'https://api.example.com', withCredentials: true });
+const thunkService    = apiServiceFactory('thunk')({ baseURL: 'https://api.example.com', withCredentials: true });
+```
+
+### ServiceConfig
+
+Full config accepted by both services:
+
+```ts
+interface ServiceConfig {
+  baseURL: string;
+  withCredentials: boolean;
+  middleware?: MiddlewareConfig;   // request / response / error middleware
+  retry?: Partial<RetryConfig>;   // override default retry behaviour
+  auth?: BaseAuthAxios;           // attach an auth strategy
+}
+```
+
+---
+
+## Hooks
+
+All hooks accept a single object argument for full IDE autocomplete support.
+
+---
+
+### useApiQuery
+
+Declarative GET hook backed by TanStack Query. Data is cached, deduplicated, and background-refetched automatically.
+
+**Signature:**
+
+```ts
+useApiQuery<TData>(inputArgs: {
+  queryKey: string | string[];
+  url: string;
+  baseURL: string;
+  queryOptions?: Omit<UndefinedInitialDataOptions<AxiosResponse<TData>>, 'queryKey' | 'queryFn'>;
+  config?: Omit<ApiConfig, 'data'>;
+})
+```
+
+**Returns:**
+
+| Field | Type | Description |
+|---|---|---|
+| `data` | `TData \| undefined` | Unwrapped response data |
+| `response` | `AxiosResponse<TData> \| undefined` | Full axios response |
+| `isLoading` | `boolean` | True on first load |
+| `isError` | `boolean` | True if query failed |
+| `isSuccess` | `boolean` | True if query succeeded |
+| `error` | `Error \| null` | Error object if failed |
+| `refetch` | `function` | Manually trigger refetch |
+
+**Default query options:**
+
+```ts
+{
+  enabled: true,
+  staleTime: 5 * 60 * 1000,      // 5 minutes
+  gcTime: 10 * 60 * 1000,        // 10 minutes
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: true,
+  refetchOnMount: false,
+  retry: 3,
+  networkMode: 'online',
+}
+```
+
+**ApiConfig fields:**
+
+```ts
+type ApiConfig = {
+  headers?: AxiosRequestHeaders;
+  params?: Record<string, any>;
+  timeout?: number;
+  signal?: AbortSignal;
+}
+```
+
+---
+
+### useApiMutation
+
+Mutation hook backed by TanStack Query for POST, PATCH, and DELETE. Handles query invalidation and toast notifications automatically.
+
+**Signature:**
+
+```ts
+useApiMutation<TData>(inputArgs: {
+  url: string;
+  method: 'post' | 'patch' | 'delete';
+  baseURL: string;
+  mutationOptions?: Omit<UseMutationOptions<AxiosResponse<TData>, Error, Record<string, unknown>>, 'mutationFn'>;
+  invalidateQueryName?: string | string[];
+  config?: ApiConfig;
+  toastConfig?: {
+    successConfig?: { message?: string; customToast?: React.ReactElement };
+    errorConfig?: { message?: string; customToast?: React.ReactElement };
+  };
+})
+```
+
+**Returns:**
+
+| Field | Type | Description |
+|---|---|---|
+| `mutate` | `(data: Record<string, unknown>) => void` | Trigger the mutation |
+| `isPending` | `boolean` | True while request is in flight |
+| `isSuccess` | `boolean` | True after successful mutation |
+| `isError` | `boolean` | True if mutation failed |
+| `error` | `Error \| null` | Error object if failed |
+
+**How `invalidateQueryName` works:**
+
+After a successful mutation, `useApiMutation` calls `queryClient.invalidateQueries({ queryKey: [invalidateQueryName] })` automatically. Any `useApiQuery` with a matching `queryKey` will refetch in the background.
+
+**`mutationOptions` callbacks (TanStack v5 signature):**
+
+```ts
+mutationOptions: {
+  onMutate: (variables) => void,                              // fires before request
+  onSuccess: (data, variables, onMutateResult, context) => void,  // fires on success
+  onError:   (error, variables, onMutateResult, context) => void, // fires on error
+}
+```
+
+---
+
+### useScratchQuery
+
+Imperative GET hook — no TanStack Query cache involved. You own the state. Use when you need a GET result inside an async function chain, not on mount.
+
+**Signature:**
+
+```ts
+useScratchQuery(inputArgs: { baseURL: string })
+```
+
+**Returns:**
+
+| Field | Type | Description |
+|---|---|---|
+| `get` | `<T>(args: { url, config? }) => Promise<T>` | Imperative GET call |
+| `isLoading` | `boolean` | True while request is in flight |
+| `isError` | `boolean` | True if last request failed |
+| `error` | `Error \| null` | Error from last failed request |
+| `cancelAll` | `() => void` | Abort all in-flight requests |
+
+---
+
+### useScratchMutation
+
+Imperative mutation hook — no TanStack Query cache involved. Use for multi-step sequential mutations or fire-and-forget calls where you don't need TanStack Query state management.
+
+**Signature:**
+
+```ts
+useScratchMutation(inputArgs: { baseURL: string })
+```
+
+**Returns:**
+
+| Field | Type | Description |
+|---|---|---|
+| `makeRequest` | `<T>(args: { method, url, data?, config? }) => Promise<AxiosResponse<T>>` | Imperative mutation call |
+| `isLoading` | `boolean` | True while request is in flight |
+| `isError` | `boolean` | True if last request failed |
+| `error` | `Error \| null` | Error from last failed request |
+| `cancelAll` | `() => void` | Abort all in-flight requests |
+
+---
+
+## Auth Strategies
+
+Auth strategies attach to an axios instance via interceptors. Pass them via `ServiceConfig.auth` when constructing a service directly, or via `apiServiceFactory`.
+
+All strategies extend `BaseAuthAxios` and implement three methods:
+
+```ts
+abstract attachCredentials(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig;
+abstract shouldIntercept(error: unknown): boolean;
+abstract handleUnauthorized(axiosInstance: AxiosInstance, failedRequest: InternalAxiosRequestConfig): Promise<unknown>;
+```
+
+---
+
+### BearerTokenStrategy
+
+Attaches a JWT Bearer token to every request. No refresh logic — use `RefreshTokenStrategy` if you need token refresh.
+
+```ts
+import { BearerTokenStrategy } from 'wire-axon/auth';
+
+const auth = new BearerTokenStrategy({
+  getAccessToken: () => localStorage.getItem('token'),
+  tokenHeaderKey: 'Authorization',  // default
+  tokenPrefix: 'Bearer',            // default
+  logger: undefined,
+});
+```
+
+---
+
+### RefreshTokenStrategy
+
+Attaches a Bearer token and automatically refreshes it on 401. Queues concurrent requests during refresh so only one refresh call is made.
+
+```ts
+import { RefreshTokenStrategy } from 'wire-axon/auth';
+
+const auth = new RefreshTokenStrategy({
+  getAccessToken: () => localStorage.getItem('accessToken'),
+  refreshAccessTokenFunc: async () => {
+    const res = await fetch('/auth/refresh', { method: 'POST', credentials: 'include' });
+    const data = await res.json();
+    localStorage.setItem('accessToken', data.accessToken);
+    return { accessToken: data.accessToken };
+  },
+  onRefreshFailure: () => {
+    localStorage.clear();
+    window.location.href = '/login';
+  },
+  logger: undefined,
+});
+```
+
+---
+
+### CookieStrategy
+
+For apps using httpOnly cookies. The browser handles cookie attachment automatically — this strategy just ensures `withCredentials: true` is set on every request.
+
+```ts
+import { CookieStrategy } from 'wire-axon/auth';
+
+const auth = new CookieStrategy({ logger: undefined });
+```
+
+---
+
+### LoggerAdapter
+
+All strategies accept an optional `logger` that implements:
+
+```ts
+interface LoggerAdapter {
+  debug(message: string, meta?: Record<string, unknown>): void;
+  info(message: string, meta?: Record<string, unknown>): void;
+  warn(message: string, meta?: Record<string, unknown>): void;
+  error(message: string, meta?: Record<string, unknown>): void;
+}
+```
+
+wire-axon ships a `ConsoleLogger` adapter out of the box:
+
+```ts
+import { ConsoleLogger } from 'wire-axon/auth';
+
+const auth = new BearerTokenStrategy({
+  getAccessToken: () => localStorage.getItem('token'),
+  logger: new ConsoleLogger(),
+});
+```
+
+---
+
+## Retry Engine
+
+Built into every service. Retries failed requests with exponential backoff and ±25% jitter to prevent thundering herd.
+
+**Default config:**
+
+```ts
+{
+  maxRetries: 3,
+  baseDelay: 1000,       // ms
+  maxDelay: 30000,       // ms
+  backoffFactor: 2,
+  retryableStatuses: [408, 429, 500, 502, 503, 504],
+  retryOnNetworkError: true,
+}
+```
+
+**Delay formula:** `min(baseDelay * backoffFactor^attempt ± 25% jitter, maxDelay)`
+
+**Override per service:**
+
+```ts
+import { AsyncThunkApiService } from 'wire-axon/services';
+
+const service = new AsyncThunkApiService('https://api.example.com', true, {
+  retry: {
+    maxRetries: 5,
+    baseDelay: 500,
+    retryableStatuses: [500, 503],
+    retryOnNetworkError: false,
+  },
+});
+```
+
+**Use standalone:**
+
+```ts
+import { RetryEngine } from 'wire-axon/features';
+
+const engine = new RetryEngine({ maxRetries: 2, baseDelay: 200 });
+
+const result = await engine.execute(async () => {
+  return fetch('/api/data');
+});
+```
+
+---
+
+## Middleware Pipeline
+
+Attach request, response, and error middleware to any service. Middleware runs in the order it is added.
+
+```ts
+import { MiddlewarePipeline } from 'wire-axon/features';
+import { AsyncThunkApiService } from 'wire-axon/services';
+
+const pipeline = new MiddlewarePipeline();
+
+pipeline
+  .addRequestMiddleware((config) => {
+    config.headers['X-Request-ID'] = crypto.randomUUID();
+    return config;
+  })
+  .addResponseMiddleware((response) => {
+    console.debug(`[${response.status}] ${response.config.url}`);
+    return response;
+  })
+  .addErrorMiddleware(async (error) => {
+    console.error('Request failed', error);
+    return Promise.reject(error);
+  });
+
+const service = new AsyncThunkApiService('https://api.example.com', true, {
+  middleware: {
+    onRequest: pipeline.getRequestMiddlewares(),
+    onResponse: pipeline.getResponseMiddlewares(),
+    onError: pipeline.getErrorMiddlewares(),
+  },
+});
+```
+
+---
+
+## Request Cancellation
+
+Every service instance manages its own `RequestCancellationManager`. Each request is keyed by `method:url` (e.g. `get:/api/users`). Calling the same endpoint twice cancels the first in-flight request automatically.
+
+```ts
+import { RequestCancellationManager } from 'wire-axon/features';
+
+// Used internally — but available standalone
+const manager = new RequestCancellationManager();
+
+const signal = manager.getSignal('get:/api/users');  // AbortSignal
+manager.cancelRequest('get:/api/users');             // cancel one
+manager.cancelAll();                                 // cancel all
+```
+
+**In scratch hooks**, call `cancelAll()` on unmount:
+
+```ts
+const { get, cancelAll } = useScratchQuery({ baseURL: 'https://api.example.com' });
+
+useEffect(() => () => cancelAll(), []);
+```
+
+---
+
+## Examples
+
+---
+
+### Example 1 — Basic TanStack Query setup (lightweight, no Redux)
+
+The simplest setup. Just wrap your app with `QueryClientProvider` and use `useApiQuery` and `useApiMutation` directly.
+
+```tsx
+// main.tsx
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
+
+const queryClient = new QueryClient();
+
+export function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Toaster richColors position="top-right" />
+      <PostList />
+    </QueryClientProvider>
+  );
+}
+```
+
+```ts
+// hooks/usePosts.ts
+import { useApiQuery, useApiMutation } from 'wire-axon/hooks';
+
+const BASE_URL = 'https://api.example.com';
+
+type Post = { id: string; title: string; body: string };
+
+/** Fetch all posts — cached for 5 minutes by default */
+export function usePosts() {
+  return useApiQuery<Post[]>({
+    queryKey: ['posts'],
+    url: '/posts',
+    baseURL: BASE_URL,
+  });
+  // returns: { data, isLoading, isError, isSuccess, error, refetch, response }
+}
+
+/** Create a post — invalidates the posts list on success */
+export function useCreatePost() {
+  return useApiMutation<Post>({
+    url: '/posts',
+    method: 'post',
+    baseURL: BASE_URL,
+    invalidateQueryName: 'posts',
+    toastConfig: {
+      successConfig: { message: 'Post created!' },
+      errorConfig: { message: 'Failed to create post.' },
+    },
+  });
+  // returns: { mutate, isPending, isSuccess, isError, error }
+}
+```
+
+```tsx
+// components/PostList.tsx
+import { usePosts, useCreatePost } from '../hooks/usePosts';
+
+export function PostList() {
+  const { data: posts, isLoading, isError, refetch } = usePosts();
+  const { mutate: createPost, isPending } = useCreatePost();
+
+  if (isLoading) return <p>Loading...</p>;
+  if (isError) return <button onClick={() => refetch()}>Retry</button>;
+
+  return (
+    <div>
+      <button
+        disabled={isPending}
+        onClick={() => createPost({ title: 'New Post', body: 'Content here' })}
+      >
+        {isPending ? 'Creating...' : 'Create Post'}
+      </button>
+      <ul>
+        {posts?.map((post) => <li key={post.id}>{post.title}</li>)}
+      </ul>
+    </div>
+  );
+}
+```
+
+---
+
+### Example 2 — With Bearer token auth
+
+Attach `BearerTokenStrategy` once at the service level. Every request gets the token automatically — no need to pass headers per-request.
+
+```ts
+// lib/apiService.ts
+import { AsyncThunkApiService } from 'wire-axon/services';
+import { BearerTokenStrategy, ConsoleLogger } from 'wire-axon/auth';
+
+/**
+ * Module-level singleton — used directly in Redux thunks.
+ * Auth token is read fresh on every request via getAccessToken().
+ */
+export const apiService = new AsyncThunkApiService(
+  'https://api.example.com',
+  true,
+  {
+    auth: new BearerTokenStrategy({
+      getAccessToken: () => localStorage.getItem('accessToken'),
+      logger: new ConsoleLogger(),
+    }),
+  }
+);
+```
+
+```ts
+// store/userSlice.ts
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { apiService } from '../lib/apiService';
+import { ApiValidationService } from 'wire-axon/helper';
+import { urlSchema, getConfigSchema } from 'wire-axon/schemas';
+
+type User = { id: string; name: string; email: string };
+
+export const fetchCurrentUser = createAsyncThunk(
+  'user/fetchCurrent',
+  async (_, { rejectWithValue }) => {
+    try {
+      const { url, config } = ApiValidationService.validateRequestData(
+        'get',
+        { url: urlSchema, config: getConfigSchema },
+        '/users/me',
+        {}
+      );
+      const res = await apiService.get<User>(url, config);
+      return res.data;
+    } catch (e) {
+      return rejectWithValue((e as Error).message);
+    }
+  }
+);
+
+const userSlice = createSlice({
+  name: 'user',
+  initialState: { data: null as User | null, loading: false, error: null as string | null },
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchCurrentUser.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchCurrentUser.fulfilled, (state, action) => { state.loading = false; state.data = action.payload; })
+      .addCase(fetchCurrentUser.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
+  },
+});
+
+export default userSlice.reducer;
+```
+
+---
+
+### Example 3 — With RefreshToken auth (access + refresh token rotation)
+
+`RefreshTokenStrategy` handles 401s automatically. Concurrent requests during refresh are queued and replayed with the new token.
+
+```ts
+// lib/apiService.ts
+import { AsyncThunkApiService } from 'wire-axon/services';
+import { RefreshTokenStrategy, ConsoleLogger } from 'wire-axon/auth';
+
+export const apiService = new AsyncThunkApiService(
+  'https://api.example.com',
+  true,
+  {
+    auth: new RefreshTokenStrategy({
+      getAccessToken: () => localStorage.getItem('accessToken'),
+
+      refreshAccessTokenFunc: async () => {
+        // Call your refresh endpoint — refresh token is sent via httpOnly cookie
+        const res = await fetch('https://api.example.com/auth/refresh', {
+          method: 'POST',
+          credentials: 'include',
+        });
+        if (!res.ok) throw new Error('Refresh failed');
+        const data = await res.json();
+        localStorage.setItem('accessToken', data.accessToken);
+        return { accessToken: data.accessToken };
+      },
+
+      onRefreshFailure: () => {
+        // Clear local state and redirect to login
+        localStorage.removeItem('accessToken');
+        window.location.href = '/login';
+      },
+
+      logger: new ConsoleLogger(),
+    }),
+  }
+);
+```
+
+```ts
+// store/postsSlice.ts
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { apiService } from '../lib/apiService';
+import { ApiValidationService } from 'wire-axon/helper';
+import { urlSchema, mutationConfigSchema, bodySchema } from 'wire-axon/schemas';
+
+type Post = { id: string; title: string; body: string };
+
+export const createPost = createAsyncThunk(
+  'posts/create',
+  async (payload: { title: string; body: string }, { rejectWithValue }) => {
+    try {
+      const { url, config, body } = ApiValidationService.validateRequestData(
+        'post',
+        { url: urlSchema, config: mutationConfigSchema, body: bodySchema },
+        '/posts',
+        {},
+        payload
+      );
+      const res = await apiService.post<Post>(url, body, config);
+      return res.data;
+    } catch (e) {
+      return rejectWithValue((e as Error).message);
+    }
+  }
+);
+
+type PostsState = { items: Post[]; loading: boolean; error: string | null };
+
+const postsSlice = createSlice({
+  name: 'posts',
+  initialState: { items: [], loading: false, error: null } as PostsState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(createPost.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(createPost.fulfilled, (state, action) => { state.loading = false; state.items.push(action.payload); })
+      .addCase(createPost.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
+  },
+});
+
+export default postsSlice.reducer;
+```
+
+---
+
+### Example 4 — With Cookie auth (httpOnly session)
+
+For server-rendered apps or backends that use httpOnly session cookies. No token management needed on the client.
+
+```ts
+// lib/apiService.ts
+import { AsyncThunkApiService } from 'wire-axon/services';
+import { CookieStrategy, ConsoleLogger } from 'wire-axon/auth';
+
+export const apiService = new AsyncThunkApiService(
+  'https://api.example.com',
+  true,  // withCredentials — required for cookies to be sent cross-origin
+  {
+    auth: new CookieStrategy({ logger: new ConsoleLogger() }),
+  }
+);
+```
+
+```ts
+// store/authSlice.ts
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { apiService } from '../lib/apiService';
+import { ApiValidationService } from 'wire-axon/helper';
+import { urlSchema, mutationConfigSchema, bodySchema } from 'wire-axon/schemas';
+
+type AuthResponse = { user: { id: string; name: string } };
+
+export const login = createAsyncThunk(
+  'auth/login',
+  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+    try {
+      const { url, config, body } = ApiValidationService.validateRequestData(
+        'post',
+        { url: urlSchema, config: mutationConfigSchema, body: bodySchema },
+        '/auth/login',
+        {},
+        credentials
+      );
+      // Server sets httpOnly cookie on response — no token handling needed
+      const res = await apiService.post<AuthResponse>(url, body, config);
+      return res.data.user;
+    } catch (e) {
+      return rejectWithValue((e as Error).message);
+    }
+  }
+);
+
+const authSlice = createSlice({
+  name: 'auth',
+  initialState: { user: null as { id: string; name: string } | null, loading: false },
+  reducers: {
+    logout: (state) => { state.user = null; },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(login.pending, (state) => { state.loading = true; })
+      .addCase(login.fulfilled, (state, action) => { state.loading = false; state.user = action.payload; })
+      .addCase(login.rejected, (state) => { state.loading = false; });
+  },
+});
+
+export const { logout } = authSlice.actions;
+export default authSlice.reducer;
+```
+
+---
+
+### Example 5 — With custom retry config and middleware
+
+Override retry behaviour and add request/response middleware per service.
+
+```ts
+// lib/apiService.ts
+import { AsyncThunkApiService } from 'wire-axon/services';
+import { MiddlewarePipeline } from 'wire-axon/features';
+import { BearerTokenStrategy } from 'wire-axon/auth';
+
+// Build middleware pipeline
+const pipeline = new MiddlewarePipeline();
+
+pipeline
+  .addRequestMiddleware((config) => {
+    // Attach a unique request ID for tracing
+    config.headers['X-Request-ID'] = crypto.randomUUID();
+    config.headers['X-Client-Version'] = '1.0.0';
+    return config;
+  })
+  .addResponseMiddleware((response) => {
+    // Log every response in development
+    if (process.env.NODE_ENV === 'development') {
+      console.debug(`[${response.status}] ${response.config.url}`, response.data);
+    }
+    return response;
+  })
+  .addErrorMiddleware(async (error) => {
+    // Send to error monitoring
+    console.error('[API Error]', error);
+    return Promise.reject(error);
+  });
+
+export const apiService = new AsyncThunkApiService(
+  'https://api.example.com',
+  true,
+  {
+    auth: new BearerTokenStrategy({
+      getAccessToken: () => localStorage.getItem('accessToken'),
+      logger: undefined,
+    }),
+    middleware: {
+      onRequest: pipeline.getRequestMiddlewares(),
+      onResponse: pipeline.getResponseMiddlewares(),
+      onError: pipeline.getErrorMiddlewares(),
+    },
+    retry: {
+      maxRetries: 5,
+      baseDelay: 500,
+      maxDelay: 15000,
+      backoffFactor: 2,
+      retryableStatuses: [500, 502, 503, 504],
+      retryOnNetworkError: true,
+    },
+  }
+);
+```
+
+---
+
+### Example 6 — useScratchQuery for on-demand imperative GET
+
+Use when you need a GET result inside an async function — not on mount, not cached.
+
+```ts
+// hooks/useFileUpload.ts
+import { useEffect } from 'react';
+import { useScratchQuery } from 'wire-axon/hooks';
+
+type PresignedUrlResponse = { uploadUrl: string; fileKey: string };
+
+/**
+ * Gets a presigned S3 URL then uploads the file directly.
+ * useScratchQuery is the right tool here — we need the URL
+ * inside an async function, not rendered to the UI.
+ */
+export function useFileUpload(baseURL: string) {
+  const { get, isLoading, isError, error, cancelAll } = useScratchQuery({ baseURL });
+
+  useEffect(() => () => cancelAll(), []);
+
+  const upload = async (file: File) => {
+    // Step 1 — get presigned URL
+    const { uploadUrl, fileKey } = await get<PresignedUrlResponse>({
+      url: '/uploads/presigned',
+      config: { params: { filename: file.name, contentType: file.type } },
+    });
+
+    // Step 2 — upload directly to S3 (not through our API)
+    await fetch(uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: { 'Content-Type': file.type },
+    });
+
+    return fileKey;
+  };
+
+  return { upload, isLoading, isError, error };
+}
+```
+
+---
+
+### Example 7 — useScratchMutation for multi-step sequential mutations
+
+Use when step N depends on the result of step N-1. Chaining three `useApiMutation` hooks via `onSuccess` is unreadable — scratch is cleaner.
+
+```ts
+// hooks/useOrderCheckout.ts
+import { useEffect } from 'react';
+import { useScratchMutation } from 'wire-axon/hooks';
+
+type CartItem = { productId: string; quantity: number };
+type Order = { id: string; total: number };
+type Payment = { id: string; status: string };
+type Fulfillment = { trackingId: string };
+
+/**
+ * Multi-step checkout flow:
+ * 1. Create order from cart
+ * 2. Process payment for that order
+ * 3. Trigger fulfillment for that payment
+ *
+ * Each step depends on the previous result — scratch hook
+ * lets us await them in sequence in one async function.
+ */
+export function useOrderCheckout(baseURL: string) {
+  const { makeRequest, isLoading, isError, error, cancelAll } = useScratchMutation({ baseURL });
+
+  useEffect(() => () => cancelAll(), []);
+
+  const checkout = async (cart: CartItem[], paymentMethodId: string) => {
+    // Step 1 — create order
+    const orderRes = await makeRequest<Order>({
+      method: 'post',
+      url: '/orders',
+      data: { items: cart },
+    });
+
+    // Step 2 — process payment (needs orderId from step 1)
+    const paymentRes = await makeRequest<Payment>({
+      method: 'post',
+      url: '/payments',
+      data: { orderId: orderRes.data.id, paymentMethodId },
+    });
+
+    // Step 3 — trigger fulfillment (needs paymentId from step 2)
+    const fulfillmentRes = await makeRequest<Fulfillment>({
+      method: 'post',
+      url: '/fulfillments',
+      data: { paymentId: paymentRes.data.id },
+    });
+
+    return {
+      order: orderRes.data,
+      payment: paymentRes.data,
+      fulfillment: fulfillmentRes.data,
+    };
+  };
+
+  return { checkout, isLoading, isError, error };
+}
+```
+
+---
+
+### Example 8 — Full production setup (Redux + TanStack Query + Auth + Middleware)
+
+Complete wiring of everything together in a real app structure.
+
+```ts
+// lib/apiService.ts
+import { AsyncThunkApiService } from 'wire-axon/services';
+import { RefreshTokenStrategy, ConsoleLogger } from 'wire-axon/auth';
+import { MiddlewarePipeline } from 'wire-axon/features';
+
+const pipeline = new MiddlewarePipeline();
+
+pipeline
+  .addRequestMiddleware((config) => {
+    config.headers['X-Request-ID'] = crypto.randomUUID();
+    return config;
+  })
+  .addResponseMiddleware((response) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.debug(`[${response.status}] ${response.config.url}`);
+    }
+    return response;
+  });
+
+/**
+ * Singleton service used in all Redux thunks.
+ * Handles token refresh, request tracing, and retry automatically.
+ */
+export const apiService = new AsyncThunkApiService(
+  process.env.REACT_APP_API_URL!,
+  true,
+  {
+    auth: new RefreshTokenStrategy({
+      getAccessToken: () => localStorage.getItem('accessToken'),
+      refreshAccessTokenFunc: async () => {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+        const data = await res.json();
+        localStorage.setItem('accessToken', data.accessToken);
+        return { accessToken: data.accessToken };
+      },
+      onRefreshFailure: () => {
+        localStorage.removeItem('accessToken');
+        window.location.href = '/login';
+      },
+      logger: new ConsoleLogger(),
+    }),
+    middleware: {
+      onRequest: pipeline.getRequestMiddlewares(),
+      onResponse: pipeline.getResponseMiddlewares(),
+      onError: pipeline.getErrorMiddlewares(),
+    },
+    retry: {
+      maxRetries: 3,
+      baseDelay: 1000,
+      retryableStatuses: [500, 502, 503, 504],
+    },
+  }
+);
+```
+
+```ts
+// store/index.ts
+import { configureStore } from '@reduxjs/toolkit';
+import userReducer from './userSlice';
+import postsReducer from './postsSlice';
+
+export const store = configureStore({
+  reducer: {
+    user: userReducer,
+    posts: postsReducer,
+  },
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+```
+
+```ts
+// store/postsSlice.ts
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { apiService } from '../lib/apiService';
+import { ApiValidationService } from 'wire-axon/helper';
+import { urlSchema, getConfigSchema, mutationConfigSchema, bodySchema } from 'wire-axon/schemas';
+
+type Post = { id: string; title: string; body: string };
+type PostsState = { items: Post[]; loading: boolean; error: string | null };
+
+export const fetchPosts = createAsyncThunk(
+  'posts/fetchAll',
+  async (_, { rejectWithValue }) => {
+    try {
+      const { url, config } = ApiValidationService.validateRequestData(
+        'get',
+        { url: urlSchema, config: getConfigSchema },
+        '/posts',
+        {}
+      );
+      const res = await apiService.get<Post[]>(url, config);
+      return res.data;
+    } catch (e) {
+      return rejectWithValue((e as Error).message);
+    }
+  }
+);
+
+export const deletePost = createAsyncThunk(
+  'posts/delete',
+  async (postId: string, { rejectWithValue }) => {
+    try {
+      const { url, config, body } = ApiValidationService.validateRequestData(
+        'delete',
+        { url: urlSchema, config: mutationConfigSchema, body: bodySchema },
+        `/posts/${postId}`,
+        {},
+        { id: postId }
+      );
+      await apiService.delete(url, body, config);
+      return postId;
+    } catch (e) {
+      return rejectWithValue((e as Error).message);
+    }
+  }
+);
+
+const postsSlice = createSlice({
+  name: 'posts',
+  initialState: { items: [], loading: false, error: null } as PostsState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchPosts.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchPosts.fulfilled, (state, action) => { state.loading = false; state.items = action.payload; })
+      .addCase(fetchPosts.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; })
+      .addCase(deletePost.fulfilled, (state, action) => {
+        state.items = state.items.filter((p) => p.id !== action.payload);
+      });
+  },
+});
+
+export default postsSlice.reducer;
+```
+
+```tsx
+// main.tsx
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Provider } from 'react-redux';
+import { Toaster } from 'sonner';
+import { store } from './store';
+
+const queryClient = new QueryClient();
+
+/**
+ * Provider order:
+ * - Redux Provider wraps everything (store available everywhere)
+ * - QueryClientProvider wraps hooks (TanStack Query cache)
+ * - Toaster for toast notifications from useApiMutation
+ */
+export function App() {
+  return (
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <Toaster richColors position="top-right" />
+        <Router />
+      </QueryClientProvider>
+    </Provider>
+  );
+}
+```
+
+```ts
+// hooks/usePosts.ts — TanStack Query for UI state, Redux for global state
+import { useApiQuery, useApiMutation } from 'wire-axon/hooks';
+import { useAppDispatch } from '../store/hooks';
+import { deletePost } from '../store/postsSlice';
+
+const BASE_URL = process.env.REACT_APP_API_URL!;
+
+type Post = { id: string; title: string; body: string };
+
+/** Declarative list — cached, background refetch, stale-while-revalidate */
+export function usePostList() {
+  return useApiQuery<Post[]>({
+    queryKey: ['posts'],
+    url: '/posts',
+    baseURL: BASE_URL,
+    queryOptions: { staleTime: 5 * 60 * 1000 },
+  });
+}
+
+/** Mutation — invalidates TanStack cache on success */
+export function useUpdatePost(postId: string) {
+  return useApiMutation<Post>({
+    url: `/posts/${postId}`,
+    method: 'patch',
+    baseURL: BASE_URL,
+    invalidateQueryName: 'posts',
+    toastConfig: {
+      successConfig: { message: 'Post updated!' },
+      errorConfig: { message: 'Update failed.' },
+    },
+    mutationOptions: {
+      onMutate: (vars) => console.debug('[updatePost] started', vars),
+      onSuccess: (res) => console.info('[updatePost] done', res.data),
+    },
+  });
+}
+
+/** Delete — goes through Redux thunk to update global store */
+export function useDeletePost() {
+  const dispatch = useAppDispatch();
+  return (postId: string) => dispatch(deletePost(postId));
+}
+```
+
+---
+
+## License
+
+Proprietary — see [LICENSE](./LICENSE) for details.
+
+---
+
+*wire-axon — Created by Srajan Saxena*
