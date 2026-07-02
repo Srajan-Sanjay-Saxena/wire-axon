@@ -1,5 +1,5 @@
 {
-  "name": "zenith-api",
+  "name": "wire-axon",
   "version": "1.0.0",
   "description": "Type-safe HTTP client with branded validation, request deduplication, retry with backoff, auth token refresh, and middleware pipeline. Built for TanStack Query + Redux Thunk.",
   "type": "module",
@@ -23,30 +23,38 @@
     "check-types": "tsc --noEmit",
     "lint": "eslint .",
     "build": "tsc && tsc-alias",
-    "prepublishOnly": "pnpm run build"
+    "prepublishOnly": "pnpm run build",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
-  "types": "./JS/index.d.ts",
-  "main": "./JS/index.js",
   "exports": {
-    ".": {
-      "types": "./JS/index.d.ts",
-      "default": "./JS/index.js"
+    "./hooks": {
+      "types": "./JS/hooks/index.d.ts",
+      "default": "./JS/hooks/index.js"
     },
-    "./hooks/useQueryApiService": {
-      "types": "./JS/hooks/useQueryApiService.d.ts",
-      "default": "./JS/hooks/useQueryApiService.js"
+    "./services": {
+      "types": "./JS/services/index.d.ts",
+      "default": "./JS/services/index.js"
     },
-    "./hooks/useMutationApiService": {
-      "types": "./JS/hooks/useMutationApiService.d.ts",
-      "default": "./JS/hooks/useMutationApiService.js"
+    "./base": {
+      "types": "./JS/base/index.d.ts",
+      "default": "./JS/base/index.js"
     },
-    "./hooks/useScratchServiceQuery": {
-      "types": "./JS/hooks/useScratchServiceQuery.d.ts",
-      "default": "./JS/hooks/useScratchServiceQuery.js"
+    "./features": {
+      "types": "./JS/features/index.d.ts",
+      "default": "./JS/features/index.js"
     },
-    "./hooks/useScratchServiceMutation": {
-      "types": "./JS/hooks/useScratchServiceMutation.d.ts",
-      "default": "./JS/hooks/useScratchServiceMutation.js"
+    "./auth": {
+      "types": "./JS/auth/index.d.ts",
+      "default": "./JS/auth/index.js"
+    },
+    "./helper": {
+      "types": "./JS/helper/index.d.ts",
+      "default": "./JS/helper/index.js"
+    },
+    "./options": {
+      "types": "./JS/options/index.d.ts",
+      "default": "./JS/options/index.js"
     }
   },
   "files": [
@@ -80,6 +88,7 @@
     "@types/react": "^19.2.8",
     "react": "^19.1.0",
     "sonner": "^2.0.7",
-    "tsc-alias": "^1.8.17"
+    "tsc-alias": "^1.8.17",
+    "vitest": "^4.1.9"
   }
 }
