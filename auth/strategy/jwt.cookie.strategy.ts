@@ -24,10 +24,7 @@ export class CookieStrategy extends BaseAuthAxios {
     return false;
   }
 
-  handleUnauthorized(
-    _axiosInstance: AxiosInstance,
-    _failedRequest: InternalAxiosRequestConfig
-  ): Promise<never> {
+  override handleUnauthorized(){
     if (this.logger) {
       this.logger.warn('Session expired — cookie invalidated by server');
     }

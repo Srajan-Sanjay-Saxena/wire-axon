@@ -1,10 +1,10 @@
-import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
-import { BaseAuthAxios } from '@base/base.auth..js';
+import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import { BaseAuthAxios } from "@base/base.auth..js";
 import {
   FailedRequestConfig,
   InterceptedRequestModifiedAxiosError,
   RefreshTokenConfig,
-} from '@lib/axios-custom.types.js';
+} from "@lib/axios-custom.types.js";
 
 interface QueuedRequest {
   resolve: (token: string) => void;
@@ -14,7 +14,7 @@ interface QueuedRequest {
 export class RefreshTokenStrategy extends BaseAuthAxios {
   private getAccessToken: () => string | null;
 
-  protected refreshAccessTokenFunc: RefreshTokenConfig['refreshAccessTokenFunc'];
+  protected refreshAccessTokenFunc: RefreshTokenConfig["refreshAccessTokenFunc"];
 
   private onRefreshFailure: () => void;
 
@@ -22,7 +22,7 @@ export class RefreshTokenStrategy extends BaseAuthAxios {
 
   private tokenPrefix: string;
 
-  private isRefreshing = false;
+  private isRefreshTokenRequestOngoing = false;
 
   private failedQueue: QueuedRequest[] = [];
 
@@ -31,12 +31,12 @@ export class RefreshTokenStrategy extends BaseAuthAxios {
     this.getAccessToken = config.getAccessToken;
     this.refreshAccessTokenFunc = config.refreshAccessTokenFunc;
     this.onRefreshFailure = config.onRefreshFailure;
-    this.tokenHeaderKey = config.tokenHeaderKey ?? 'Authorization';
-    this.tokenPrefix = config.tokenPrefix ?? 'Bearer';
+    this.tokenHeaderKey = config.tokenHeaderKey ?? "Authorization";
+    this.tokenPrefix = config.tokenPrefix ?? "Bearer";
   }
 
   attachCredentials(
-    config: InternalAxiosRequestConfig
+    config: InternalAxiosRequestConfig,
   ): InternalAxiosRequestConfig {
     const token = this.getAccessToken();
     if (token) {
@@ -47,18 +47,18 @@ export class RefreshTokenStrategy extends BaseAuthAxios {
   }
 
   shouldIntercept(error: InterceptedRequestModifiedAxiosError): boolean {
-    if (!error || typeof error !== 'object') return false;
+    if (!error || typeof error !== "object") return false;
 
     return error.response?.status === 401 && !error.config?._retry;
   }
 
   async handleUnauthorized(
     axiosInstance: AxiosInstance,
-    failedRequest: FailedRequestConfig
+    failedRequest: FailedRequestConfig,
   ): Promise<unknown> {
-    if (this.isRefreshing) {
+    if (this.isRefreshTokenRequestOngoing) {
       if (this.logger) {
-        this.logger.debug('Refresh in progress — queuing request', {
+        this.logger.debug("Refresh in progress — queuing request", {
           url: failedRequest.url,
         });
       }
@@ -73,15 +73,15 @@ export class RefreshTokenStrategy extends BaseAuthAxios {
     }
 
     failedRequest._retry = true;
-    this.isRefreshing = true;
+    this.isRefreshTokenRequestOngoing = true;
     if (this.logger) {
-      this.logger.info('Starting token refresh');
+      this.logger.info("Starting token refresh");
     }
 
     try {
       const tokens = await this.refreshAccessTokenFunc();
       if (this.logger) {
-        this.logger.info('Token refreshed successfully');
+        this.logger.info("Token refreshed successfully");
       }
 
       this.processQueue(null, tokens.accessToken);
@@ -91,18 +91,18 @@ export class RefreshTokenStrategy extends BaseAuthAxios {
       return axiosInstance(failedRequest);
     } catch (refreshError: unknown) {
       if (this.logger) {
-        this.logger.error('Token refresh failed', {
+        this.logger.error("Token refresh failed", {
           error:
             refreshError instanceof Error
               ? refreshError.message
-              : 'Unknown error',
+              : "Unknown error",
         });
       }
       this.processQueue(refreshError, null);
       this.onRefreshFailure();
       return Promise.reject(refreshError);
     } finally {
-      this.isRefreshing = false;
+      this.isRefreshTokenRequestOngoing = false;
     }
   }
 

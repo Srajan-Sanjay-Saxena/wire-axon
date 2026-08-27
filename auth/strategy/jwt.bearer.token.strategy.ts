@@ -36,10 +36,7 @@ export class BearerTokenStrategy extends BaseAuthAxios {
     return false;
   }
 
-  handleUnauthorized(
-    _axiosInstance: AxiosInstance,
-    _failedRequest: InternalAxiosRequestConfig
-  ): Promise<never> {
+  override handleUnauthorized(){
     if (this.logger) {
       this.logger.error('Unauthorized — no refresh strategy configured');
     }

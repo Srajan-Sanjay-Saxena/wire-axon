@@ -9,14 +9,14 @@ import { TANSTACK_QUERY_DEFAULT_OPTIONS } from "@options/tanstack.query.default.
 import type { AxiosResponse } from "axios";
 import type { ServiceConfig } from "@config/http.client.config.js";
 
-type FeatureConfig = Omit<ServiceConfig, "baseURL" | "withCredentials">;
+type FeatureConfig = Omit<ServiceConfig, "baseURL">;
 
 export function useApiQuery<TData>(inputArgs: {
   queryKey: string | string[];
   url: string;
   baseURL: string;
   featureConfig?: FeatureConfig;
-  apiConfig?: Omit<ApiConfig, "data" | "headers">;
+  apiConfig?: Omit<ApiConfig, "data">;
   queryOptions?: Omit<UndefinedInitialDataOptions<AxiosResponse<TData>>, "queryKey" | "queryFn">;
 }) {
   const {
@@ -24,20 +24,18 @@ export function useApiQuery<TData>(inputArgs: {
     url,
     baseURL,
     featureConfig,
-    apiConfig = {} as Omit<ApiConfig, "data" | "headers">,
+    apiConfig = {} as Omit<ApiConfig, "data">,
     queryOptions = TANSTACK_QUERY_DEFAULT_OPTIONS,
   } = inputArgs;
 
   const apiServiceRef = useRef<ApiFactoryInstanceType | null>(null);
-  const prevBaseURL = useRef<string | null>(null);
 
-  if (!apiServiceRef.current || prevBaseURL.current !== baseURL) {
+  if (!apiServiceRef.current) {
     apiServiceRef.current = apiServiceFactory("tanstack")({
       baseURL,
-      withCredentials: true,
+      withCredentials: featureConfig?.withCredentials ?? false,
       ...featureConfig,
     });
-    prevBaseURL.current = baseURL;
   }
   const apiService = apiServiceRef.current;
 

@@ -10,7 +10,7 @@ import { ApiConfig } from "@lib/api.config.types.js";
 import { useRef, useState } from "react";
 import type { ServiceConfig } from "@config/http.client.config.js";
 
-type FeatureConfig = Omit<ServiceConfig, "baseURL" | "withCredentials">;
+type FeatureConfig = Omit<ServiceConfig, "baseURL">;
 
 export function useScratchMutation(inputArgs: {
   baseURL: string;
@@ -19,7 +19,11 @@ export function useScratchMutation(inputArgs: {
   const { baseURL, featureConfig } = inputArgs;
 
   const serviceRef = useRef<ApiFactoryInstanceType>(
-    apiServiceFactory("thunk")({ baseURL, withCredentials: true, ...featureConfig }),
+    apiServiceFactory("thunk")({
+      baseURL,
+      withCredentials: featureConfig?.withCredentials ?? false,
+      ...featureConfig,
+    }),
   );
   const service = serviceRef.current;
   const [isLoading, setIsLoading] = useState(false);

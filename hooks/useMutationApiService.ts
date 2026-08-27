@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import type { AxiosResponse } from "axios";
 import type { ServiceConfig } from "@config/http.client.config.js";
 
-type FeatureConfig = Omit<ServiceConfig, "baseURL" | "withCredentials">;
+type FeatureConfig = Omit<ServiceConfig, "baseURL">;
 type MutationVariables = Record<string, unknown>;
 type MutationOptions<TData> = Omit<
   UseMutationOptions<AxiosResponse<TData>, Error, MutationVariables>,
@@ -57,15 +57,13 @@ export function useApiMutation<TData>(inputArgs: {
   } = inputArgs;
 
   const apiServiceRef = useRef<ApiFactoryInstanceType | null>(null);
-  const prevBaseURL = useRef<string | null>(null);
 
-  if (!apiServiceRef.current || prevBaseURL.current !== baseURL) {
+  if (!apiServiceRef.current) {
     apiServiceRef.current = apiServiceFactory("tanstack")({
       baseURL,
-      withCredentials: true,
+      withCredentials: featureConfig?.withCredentials ?? false,
       ...featureConfig,
     });
-    prevBaseURL.current = baseURL;
   }
   const apiService = apiServiceRef.current;
 

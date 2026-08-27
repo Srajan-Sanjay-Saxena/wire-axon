@@ -77,13 +77,6 @@ export abstract class BaseApiService {
     signal?: AbortSignal,
   ): Promise<AxiosResponse<TResData>>;
 
-  protected abstract executeRequest<TResData>(
-    method: "get" | "post" | "delete" | "patch",
-    url: ValidatedUrl,
-    config: ValidatedGetConfig | ValidatedMutationConfig,
-    signal?: AbortSignal,
-  ): Promise<AxiosResponse<TResData>>;
-
   public async get<TResData>(
     url: ValidatedUrl,
     config: ValidatedGetConfig = {} as ValidatedGetConfig,

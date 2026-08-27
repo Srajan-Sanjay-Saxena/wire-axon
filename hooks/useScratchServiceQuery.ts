@@ -6,7 +6,7 @@ import { ApiConfig } from "@lib/api.config.types.js";
 import { useRef, useState } from "react";
 import type { ServiceConfig } from "@config/http.client.config.js";
 
-type FeatureConfig = Omit<ServiceConfig, "baseURL" | "withCredentials">;
+type FeatureConfig = Omit<ServiceConfig, "baseURL">;
 
 export function useScratchQuery(inputArgs: {
   baseURL: string;
@@ -15,7 +15,11 @@ export function useScratchQuery(inputArgs: {
   const { baseURL, featureConfig } = inputArgs;
 
   const serviceRef = useRef<ApiFactoryInstanceType>(
-    apiServiceFactory("thunk")({ baseURL, withCredentials: true, ...featureConfig }),
+    apiServiceFactory("thunk")({
+      baseURL,
+      withCredentials: featureConfig?.withCredentials ?? false,
+      ...featureConfig,
+    }),
   );
   const service = serviceRef.current;
   const [isLoading, setIsLoading] = useState(false);
@@ -24,7 +28,7 @@ export function useScratchQuery(inputArgs: {
 
   const get = async <T>(inputArgs: {
     url: string;
-    apiConfig?: Omit<ApiConfig, "data" | "headers">;
+    apiConfig?: Omit<ApiConfig, "data">;
   }) => {
     const { url, apiConfig = {} as Omit<ApiConfig, "data"> } = inputArgs;
     const { url: validUrl, config: validConfig } =

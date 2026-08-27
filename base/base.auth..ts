@@ -1,5 +1,5 @@
-import { LoggerAdapter, LoggerConfig } from '@config/auth.config.js';
-import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import { LoggerAdapter, LoggerConfig } from "@config/auth.config.js";
+import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
 export abstract class BaseAuthAxios {
   protected logger: LoggerAdapter | undefined;
@@ -9,11 +9,12 @@ export abstract class BaseAuthAxios {
   }
 
   /**
+   * @params config : Axios request type (InternalAxiosRequestConfig) that is going outside after normalization of the AxiosRequestConfig
    * Attach credentials to outgoing request config.
    * Each strategy decides HOW credentials are attached (header, cookie, etc.)
    */
   abstract attachCredentials(
-    config: InternalAxiosRequestConfig
+    config: InternalAxiosRequestConfig,
   ): InternalAxiosRequestConfig;
 
   /**
@@ -27,9 +28,9 @@ export abstract class BaseAuthAxios {
    * Could be: refresh token, redirect to login, or do nothing.
    * Returns the retried response or rejects.
    */
-  abstract handleUnauthorized(
+  abstract handleUnauthorized<TAxiosConfig extends InternalAxiosRequestConfig>(
     axiosInstance: AxiosInstance,
-    failedRequest: InternalAxiosRequestConfig
+    failedRequest: TAxiosConfig,
   ): Promise<unknown>;
 
   /**
@@ -41,13 +42,13 @@ export abstract class BaseAuthAxios {
     axiosInstance.interceptors.request.use(
       (config) => {
         if (this.logger) {
-          this.logger.debug('Attaching credentials to request', {
+          this.logger.debug("Attaching credentials to request", {
             url: config.url,
           });
         }
         return this.attachCredentials(config);
       },
-      (error) => Promise.reject(error)
+      (error) => Promise.reject(error),
     );
 
     // Response interceptor — handle 401
@@ -58,14 +59,14 @@ export abstract class BaseAuthAxios {
           return Promise.reject(error);
         }
         if (this.logger) {
-          this.logger.warn('Unauthorized response intercepted', {
+          this.logger.warn("Unauthorized response intercepted", {
             url: error.config?.url,
             status: error.response?.status,
           });
         }
 
         return this.handleUnauthorized(axiosInstance, error.config);
-      }
+      },
     );
   }
 }

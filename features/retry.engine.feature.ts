@@ -45,7 +45,8 @@ export class RetryEngine {
   ): Promise<TReturn> {
     for (let attempt = 0; attempt <= this.config.maxRetries; attempt++) {
       try {
-        return await fn(...args);
+        const data = await fn(...args);
+        return data;
       } catch (error: unknown) {
         if (!this.shouldRetry(attempt, error)) {
           throw error;
