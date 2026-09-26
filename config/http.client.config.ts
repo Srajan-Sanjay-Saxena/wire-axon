@@ -4,7 +4,7 @@ import { RetryConfig } from "@config/retry.engine.config.js";
 
 export interface ServiceConfig {
   baseURL: string;
-  withCredentials: boolean;
+  withCredentials?: boolean;
   middleware?: MiddlewareConfig;
   retry?: Partial<RetryConfig>;
   auth?: BaseAuthAxios;
