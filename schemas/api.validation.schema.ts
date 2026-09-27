@@ -7,25 +7,15 @@ const baseConfigSchema = z.object({
   signal: z.instanceof(AbortSignal).optional(),
 });
 
-const getConfigSchema = baseConfigSchema.strict();
-type GetConfigSchemaType = z.infer<typeof getConfigSchema>;
-
-const mutationConfigSchema = baseConfigSchema
-  .extend({
-    data: z.record(z.string(), z.any()).optional(),
-  })
-  .strict();
-type MutationConfigSchemaType = z.infer<typeof mutationConfigSchema>;
-
-export const bodySchema = z
-  .record(z.string(), z.any())
-  .refine((data) => Object.keys(data).length > 0, {
-    message: 'Request body cannot be empty',
-  });
-type BodySchemaType = z.infer<typeof bodySchema>;
+const GetConfigSchema = baseConfigSchema.strict();
+const MutationConfigSchema = baseConfigSchema
+.extend({
+  data: z.record(z.string(), z.any()).optional(),
+})
+.strict();
 
 // Accept both absolute URLs and relative paths (e.g. /api/users)
-const urlSchema = z
+const UrlSchema = z
   .string()
   .min(1, 'URL cannot be empty')
   .refine(
@@ -39,12 +29,15 @@ const urlSchema = z
     },
     { message: 'Must be a valid URL or a relative path starting with /' }
   );
-type UrlSchemaType = z.infer<typeof urlSchema>;
 
-export { getConfigSchema, mutationConfigSchema, urlSchema };
+
+type MutationConfigSchemaType = z.infer<typeof MutationConfigSchema>;
+type GetConfigSchemaType = z.infer<typeof GetConfigSchema>;
+type UrlSchemaType = z.infer<typeof UrlSchema>;
+
+export { GetConfigSchema, MutationConfigSchema, UrlSchema };
 export type {
   GetConfigSchemaType,
   MutationConfigSchemaType,
-  BodySchemaType,
   UrlSchemaType,
 };

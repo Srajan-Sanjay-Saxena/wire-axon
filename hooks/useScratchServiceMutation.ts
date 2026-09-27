@@ -1,14 +1,10 @@
 import { apiServiceFactory } from "@services/api.factory.service.js";
 import type { ApiFactoryInstanceType } from "@lib/api.factory.types.js";
 import { ApiValidationService } from "@helper/validation.manager.js";
-import {
-  urlSchema,
-  mutationConfigSchema,
-  bodySchema,
-} from "@schemas/api.validation.schema.js";
 import { ApiConfig } from "@lib/api.config.types.js";
 import { useRef, useState } from "react";
 import type { ServiceConfig } from "@config/http.client.config.js";
+import type { RequestBodyValidator } from "@lib/api.validation.manager.return.types.js";
 
 type FeatureConfig = Omit<ServiceConfig, "baseURL">;
 
@@ -35,15 +31,16 @@ export function useScratchMutation(inputArgs: {
     url: string;
     data?: unknown;
     apiConfig?: ApiConfig;
+    bodyValidator: Required<RequestBodyValidator>;
   }) => {
-    const { method, url, data, apiConfig = {} } = inputArgs;
+    const { method, url, data, apiConfig = {}, bodyValidator } = inputArgs;
     const {
       url: validUrl,
       config: validConfig,
       body: validBody,
     } = ApiValidationService.validateRequestData(
       method,
-      { url: urlSchema, config: mutationConfigSchema, body: bodySchema },
+      bodyValidator,
       url,
       apiConfig,
       data,

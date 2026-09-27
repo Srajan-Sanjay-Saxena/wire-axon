@@ -1,7 +1,6 @@
 import { ApiValidationService } from "@helper/validation.manager.js";
 import { apiServiceFactory } from "@services/api.factory.service.js";
 import type { ApiFactoryInstanceType } from "@lib/api.factory.types.js";
-import { urlSchema, getConfigSchema } from "@schemas/api.validation.schema.js";
 import { ApiConfig } from "@lib/api.config.types.js";
 import { useQuery, UndefinedInitialDataOptions } from "@tanstack/react-query";
 import { useRef } from "react";
@@ -43,7 +42,7 @@ export function useApiQuery<TData>(inputArgs: {
     const { url: validatedUrl, config: validatedConfig } =
       ApiValidationService.validateRequestData(
         "get",
-        { url: urlSchema, config: getConfigSchema },
+        {},
         url,
         apiConfig,
       );

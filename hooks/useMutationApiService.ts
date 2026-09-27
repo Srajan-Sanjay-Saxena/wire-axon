@@ -1,11 +1,6 @@
 import { ApiValidationService } from "@helper/validation.manager.js";
 import { apiServiceFactory } from "@services/api.factory.service.js";
 import type { ApiFactoryInstanceType } from "@lib/api.factory.types.js";
-import {
-  urlSchema,
-  mutationConfigSchema,
-  bodySchema,
-} from "@schemas/api.validation.schema.js";
 import { ApiConfig } from "@lib/api.config.types.js";
 import {
   useMutation,
@@ -17,6 +12,7 @@ import { useRef } from "react";
 import { toast } from "sonner";
 import type { AxiosResponse } from "axios";
 import type { ServiceConfig } from "@config/http.client.config.js";
+import type { RequestBodyValidator } from "@lib/api.validation.manager.return.types.js";
 
 type FeatureConfig = Omit<ServiceConfig, "baseURL">;
 type MutationVariables = Record<string, unknown>;
@@ -44,6 +40,7 @@ export function useApiMutation<TData>(inputArgs: {
   mutationOptions?: MutationOptions<TData>;
   invalidateQueryName?: string | string[];
   toastConfig?: ToastConfig;
+  bodyValidator: Required<RequestBodyValidator>;
 }) {
   const {
     url,
@@ -54,6 +51,7 @@ export function useApiMutation<TData>(inputArgs: {
     mutationOptions = TANSTACK_MUTATION_DEFAULT_OPTIONS as MutationOptions<TData>,
     invalidateQueryName,
     toastConfig,
+    bodyValidator,
   } = inputArgs;
 
   const apiServiceRef = useRef<ApiFactoryInstanceType | null>(null);
@@ -76,7 +74,7 @@ export function useApiMutation<TData>(inputArgs: {
       body: validatedBody,
     } = ApiValidationService.validateRequestData(
       method,
-      { url: urlSchema, config: mutationConfigSchema, body: bodySchema },
+      bodyValidator,
       url,
       apiConfig,
       data,

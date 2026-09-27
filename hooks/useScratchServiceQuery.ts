@@ -1,7 +1,6 @@
 import { apiServiceFactory } from "@services/api.factory.service.js";
 import type { ApiFactoryInstanceType } from "@lib/api.factory.types.js";
 import { ApiValidationService } from "@helper/validation.manager.js";
-import { urlSchema, getConfigSchema } from "@schemas/api.validation.schema.js";
 import { ApiConfig } from "@lib/api.config.types.js";
 import { useRef, useState } from "react";
 import type { ServiceConfig } from "@config/http.client.config.js";
@@ -34,7 +33,7 @@ export function useScratchQuery(inputArgs: {
     const { url: validUrl, config: validConfig } =
       ApiValidationService.validateRequestData(
         "get",
-        { url: urlSchema, config: getConfigSchema },
+        {},
         url,
         apiConfig,
       );

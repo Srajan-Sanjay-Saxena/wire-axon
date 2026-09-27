@@ -1,7 +1,7 @@
 import { MiddlewarePipeline } from "@features/middleware.pipeline.feature.js";
 import { RetryEngine } from "@features/retry.engine.feature.js";
 import {
-  ValidatedBody,
+  ValidatedBrand,
   ValidatedGetConfig,
   ValidatedMutationConfig,
   ValidatedUrl,
@@ -94,7 +94,7 @@ export abstract class BaseApiService {
 
   public async post<TResData>(
     url: ValidatedUrl,
-    body: ValidatedBody,
+    body: ValidatedBrand<Record<string, unknown>>,
     config: ValidatedMutationConfig = {} as ValidatedMutationConfig,
   ): Promise<AxiosResponse<TResData>> {
     const key = `post:${url}` as AllowedKeysType;
@@ -111,7 +111,7 @@ export abstract class BaseApiService {
 
   public async patch<TResData>(
     url: ValidatedUrl,
-    body: ValidatedBody,
+    body: ValidatedBrand<Record<string, unknown>>,
     config: ValidatedMutationConfig = {} as ValidatedMutationConfig,
   ): Promise<AxiosResponse<TResData>> {
     const key = `patch:${url}` as AllowedKeysType;
@@ -128,7 +128,7 @@ export abstract class BaseApiService {
 
   public async delete<TResData>(
     url: ValidatedUrl,
-    body?: ValidatedBody,
+    body?: ValidatedBrand<Record<string, unknown>>,
     config: ValidatedMutationConfig = {} as ValidatedMutationConfig,
   ): Promise<AxiosResponse<TResData>> {
     const key = `delete:${url}` as AllowedKeysType;

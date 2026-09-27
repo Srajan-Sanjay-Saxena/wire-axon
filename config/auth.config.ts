@@ -14,7 +14,7 @@ interface BaseAuthConfig {
 }
 
 interface LoggerConfig {
-  logger: LoggerAdapter | undefined;
+  logger?: LoggerAdapter;
 }
 
 export type { LoggerAdapter, LoggerConfig, BaseAuthConfig };
