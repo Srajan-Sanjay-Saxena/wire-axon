@@ -86,7 +86,7 @@ export function useApiMutation<TData>(inputArgs: {
     );
   };
 
-  const { isPending, mutate , data , isSuccess, isError, error } = useMutation<
+  const { isPending, mutate , data , isSuccess, isError, error, reset } = useMutation<
     AxiosResponse<TData>,
     Error,
     MutationVariables
@@ -118,5 +118,5 @@ export function useApiMutation<TData>(inputArgs: {
     },
   } as UseMutationOptions<AxiosResponse<TData>, Error, MutationVariables>);
 
-  return { isPending, mutate, data, isSuccess, isError, error };
+  return { isPending, mutate, data, isSuccess, isError, error, reset };
 }
