@@ -2,7 +2,7 @@ import { ApiValidationService } from "@helper/validation.manager.js";
 import { apiServiceFactory } from "@services/api.factory.service.js";
 import type { ApiFactoryInstanceType } from "@lib/api.factory.types.js";
 import { ApiConfig } from "@lib/api.config.types.js";
-import { useQuery, UndefinedInitialDataOptions, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, UndefinedInitialDataOptions } from "@tanstack/react-query";
 import { useRef } from "react";
 import { TANSTACK_QUERY_DEFAULT_OPTIONS } from "@options/tanstack.query.default.options.js";
 import type { AxiosResponse } from "axios";
@@ -52,8 +52,6 @@ export function useApiQuery<TData>(inputArgs: {
   const { data, error, isLoading, isError, isSuccess, refetch } = useQuery({
     queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
     queryFn,
-    structuralSharing: false,
-    placeholderData: keepPreviousData,
     ...queryOptions,
   } as UndefinedInitialDataOptions<AxiosResponse<TData>>);
 
