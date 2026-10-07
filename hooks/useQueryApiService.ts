@@ -52,6 +52,7 @@ export function useApiQuery<TData>(inputArgs: {
   const { data, error, isLoading, isError, isSuccess, refetch } = useQuery({
     queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
     queryFn,
+    structuralSharing: false,
     ...queryOptions,
   } as UndefinedInitialDataOptions<AxiosResponse<TData>>);
 
