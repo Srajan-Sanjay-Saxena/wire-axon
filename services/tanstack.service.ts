@@ -26,6 +26,17 @@ export class TanStackApiService extends BaseApiService {
     }
 
     const mutationConfig = config as ValidatedMutationConfig;
+
+    // DELETE requests need body in config.data, not as second argument
+    // axios.delete(url, config) where config.data contains the body
+    if (method === 'delete') {
+      return this.axiosInstance.delete<TResData>(finalURL, {
+        ...axiosConfig,
+        data: mutationConfig.data,
+      });
+    }
+
+    // POST and PATCH take body as second argument
     return this.axiosInstance[method]<TResData>(
       finalURL,
       mutationConfig.data,
